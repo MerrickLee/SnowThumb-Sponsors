@@ -2,30 +2,31 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 
-// Email links land here: /auth/confirm?token_hash=...&type=magiclink|invite|signup|email|recovery&next=/portal
-// Verified on the server, so the link works in any browser or device,
-// not only the one that requested it (unlike the PKCE ?code= flow).
+// The "Continue" button on /auth/confirm posts here. Verifying only on POST
+// means email scanners and click-tracking redirects (which only GET the link)
+// can't use up the one-time token before the sponsor does.
 const TYPES: EmailOtpType[] = ["magiclink", "invite", "signup", "email", "recovery", "email_change"];
 
-export async function GET(request: NextRequest) {
-  const url = request.nextUrl;
-  const tokenHash = url.searchParams.get("token_hash");
-  const type = url.searchParams.get("type") as EmailOtpType | null;
-  const rawNext = url.searchParams.get("next") ?? "/";
+export async function POST(request: NextRequest) {
+  const form = await request.formData();
+  const tokenHash = String(form.get("token_hash") ?? "");
+  const type = String(form.get("type") ?? "") as EmailOtpType;
+  const rawNext = String(form.get("next") ?? "/");
   const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/";
+  const origin = request.nextUrl.origin;
 
   const fail = (reason: string) => {
-    const to = new URL("/login", url.origin);
+    const to = new URL("/login", origin);
     to.searchParams.set("error", reason);
     if (next !== "/") to.searchParams.set("next", next);
-    return NextResponse.redirect(to);
+    return NextResponse.redirect(to, 303);
   };
 
-  if (!tokenHash || !type || !TYPES.includes(type)) return fail("link_invalid");
+  if (!tokenHash || !TYPES.includes(type)) return fail("link_invalid");
 
   const supabase = await createClient();
   const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
   if (error) return fail(/expired|invalid|not found/i.test(error.message) ? "link_expired" : "link_invalid");
 
-  return NextResponse.redirect(new URL(next, url.origin));
+  return NextResponse.redirect(new URL(next, origin), 303);
 }

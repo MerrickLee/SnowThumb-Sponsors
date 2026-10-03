@@ -76,6 +76,19 @@ Deno.serve(async (req) => {
     return json({ error: { http_code: 500, message: "Email service not configured" } }, 500);
   }
 
+  // Guard against the easy mistake of pasting this function's own URL as the
+  // GHL webhook: it would call itself and fail with "Missing required headers".
+  try {
+    const host = new URL(ghl).hostname;
+    if (host.endsWith(".supabase.co") || host.endsWith(".supabase.in")) {
+      console.error("auth-email: GHL_AUTH_EMAIL_WEBHOOK points at Supabase, not GHL. Paste the GHL inbound webhook URL (services.leadconnectorhq.com/hooks/...).");
+      return json({ error: { http_code: 500, message: "Email service misconfigured" } }, 500);
+    }
+  } catch {
+    console.error("auth-email: GHL_AUTH_EMAIL_WEBHOOK is not a valid URL");
+    return json({ error: { http_code: 500, message: "Email service misconfigured" } }, 500);
+  }
+
   const raw = await req.text();
   let payload: HookPayload;
   try {

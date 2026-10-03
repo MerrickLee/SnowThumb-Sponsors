@@ -46,7 +46,7 @@ export default async function AdminOverview({ searchParams }: PageProps<"/admin"
     <>
       <PageHeader title="Overview" sub="Everything across all sponsors." />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-8">
         <Tile href="/admin/applications" label="New applications" value={newApps} hot={newApps > 0} />
         <Tile href="/admin/review" label="Waiting for review" value={inReview} hot={inReview > 0} />
         <Tile href="/admin/campaigns" label="Approved campaigns" value={live} />
@@ -90,8 +90,8 @@ export default async function AdminOverview({ searchParams }: PageProps<"/admin"
 
 function Tile({ href, label, value, hot }: { href: string; label: string; value: number; hot?: boolean }) {
   return (
-    <Link href={href} className={`card p-4 hover:border-muted ${hot ? "border-accent/60" : ""}`}>
-      <p className="text-xs text-muted uppercase tracking-wide">{label}</p>
+    <Link href={href} className={`card p-3 sm:p-4 hover:border-muted ${hot ? "border-accent/60" : ""}`}>
+      <p className="text-[11px] sm:text-xs text-muted uppercase tracking-wide leading-tight">{label}</p>
       <p className={`text-3xl font-semibold mt-1 num ${hot ? "text-accent" : ""}`}>{value}</p>
     </Link>
   );

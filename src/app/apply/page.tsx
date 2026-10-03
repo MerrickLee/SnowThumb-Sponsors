@@ -89,7 +89,7 @@ export default async function ApplyPage() {
         <section id="placements" className="mx-auto max-w-6xl px-4 py-12 md:py-16 scroll-mt-16">
           <p className="eyebrow">Placements</p>
           <h2 className="title text-3xl md:text-4xl mt-2">Where your brand shows up.</h2>
-          <p className="text-muted mt-2 max-w-2xl">All art is PNG or JPEG at the exact size listed. The console checks sizes before you upload, and we send you templates for boards.</p>
+          <p className="text-muted mt-2 max-w-2xl">All art is PNG or JPEG at the exact size listed. The console checks sizes before you upload, and every placement comes with a downloadable template.</p>
           <div className="grid md:grid-cols-2 gap-4 mt-8">
             {groups.map(({ kind, slots }) => (
               <article key={kind} className="card p-5">

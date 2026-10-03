@@ -46,6 +46,8 @@ function LoginForm() {
         const secs = Number(error.message.match(/(\d+)\s*second/)?.[1] ?? 60);
         setWait(secs);
         setError(`For security, you can request a new link in ${secs} seconds. Use the newest email we sent; older links stop working.`);
+      } else if (/hook|sending|email/i.test(error.message) || (error.status ?? 0) >= 500) {
+        setError("We couldn't send your sign-in email. Try again in a minute, or email sponsors@snowthumb.com.");
       } else {
         setError(error.message);
       }

@@ -50,8 +50,8 @@ export function CampaignReview({ campaignId }: { campaignId: string }) {
   return (
     <div className="space-y-3">
       <div>
-        <label className="label">Notes to sponsor</label>
-        <textarea className="textarea" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)}
+        <label className="label" htmlFor={`notes-${campaignId}`}>Notes to sponsor</label>
+        <textarea id={`notes-${campaignId}`} className="textarea" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)}
           placeholder="Required when sending back. Optional on approve." />
       </div>
       <div className="flex flex-wrap gap-2">

@@ -19,7 +19,6 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
     { href: "/admin/campaigns", label: "Campaigns" },
     { href: "/admin/gear", label: "Gear & challenges" },
     { href: "/admin/house", label: "House ads" },
-    { href: "/portal", label: "Sponsor view", exact: true },
   ];
-  return <Shell area="Admin" nav={nav} email={s.email}>{children}</Shell>;
+  return <Shell area="Admin" nav={nav} email={s.email} switchTo={{ href: "/portal", label: "Sponsor view →" }}>{children}</Shell>;
 }

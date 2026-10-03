@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Empty, PageHeader } from "@/components/Shell";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -26,7 +27,10 @@ export default async function ReviewQueue() {
     <>
       <PageHeader title="Review" sub="Approving validates every file against its slot, publishes it, and the app picks it up on the next open." />
       {list.length === 0 ? (
-        <Empty>Nothing waiting for review.</Empty>
+        <Empty title="You're all caught up"
+          action={<Link className="btn" href="/admin/campaigns">See all campaigns</Link>}>
+          When a sponsor submits art, it shows up here with a preview of each placement. Approving publishes it to the app.
+        </Empty>
       ) : (
         <div className="space-y-6">
           {list.map((c) => (

@@ -16,17 +16,27 @@ export default async function AdminCampaigns({ searchParams }: PageProps<"/admin
   if (status) q = q.eq("status", status);
   const { data } = await q;
   const list = (data ?? []) as (Campaign & { sponsors: { name: string; is_house: boolean } })[];
-  const filters = ["", "approved", "submitted", "draft", "rejected", "paused", "archived"];
+  const filters: [string, string][] = [["", "All"], ["approved", "Live"], ["submitted", "In review"], ["draft", "Draft"], ["rejected", "Sent back"], ["paused", "Paused"], ["archived", "Archived"]];
 
   return (
     <>
       <PageHeader title="Campaigns" sub="Priority decides who wins a slot (paid 10+, house 0). Weight splits a slot between campaigns at the same priority." />
-      <div className="flex flex-wrap gap-2 mb-4">
-        {filters.map((f) => (
-          <a key={f || "all"} href={f ? `?status=${f}` : "?"} className={`btn btn-sm ${status === f ? "btn-primary" : ""}`}>{f || "all"}</a>
+      <nav aria-label="Filter by status" className="flex gap-2 mb-4 overflow-x-auto -mx-4 px-4 pb-1 [scrollbar-width:none]">
+        {filters.map(([f, label]) => (
+          <Link key={f || "all"} href={f ? `?status=${f}` : "/admin/campaigns"} aria-current={status === f ? "page" : undefined}
+            className={`btn btn-sm whitespace-nowrap ${status === f ? "btn-primary" : ""}`}>{label}</Link>
         ))}
-      </div>
-      {list.length === 0 ? <Empty>No campaigns.</Empty> : (
+      </nav>
+      {list.length === 0 ? (
+        <Empty title={status ? "Nothing here" : "No campaigns yet"}
+          action={status
+            ? <Link className="btn" href="/admin/campaigns">Show all campaigns</Link>
+            : <Link className="btn btn-primary" href="/admin/house">Start a house campaign</Link>}>
+          {status
+            ? "No campaigns have this status right now."
+            : "Sponsor campaigns appear here once a sponsor starts one. Fill empty placements with your own brands in the meantime."}
+        </Empty>
+      ) : (
         <div className="space-y-3">
           {list.map((c) => (
             <div key={c.id} className="card p-4 grid lg:grid-cols-[1fr_auto] gap-4 items-start">
@@ -39,10 +49,10 @@ export default async function AdminCampaigns({ searchParams }: PageProps<"/admin
                 <ActionForm action={updateCampaignAdmin} submit="Save" submitClass="btn btn-sm"
                   className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
                   <input type="hidden" name="id" value={c.id} />
-                  <div><label className="label">Priority</label><input name="priority" type="number" className="input" defaultValue={c.priority} /></div>
-                  <div><label className="label">Weight</label><input name="weight" type="number" min={1} max={1000} className="input" defaultValue={c.weight} /></div>
-                  <div><label className="label">Start</label><input name="starts_at" type="date" className="input" defaultValue={day(c.starts_at)} /></div>
-                  <div><label className="label">End</label><input name="ends_at" type="date" className="input" defaultValue={day(c.ends_at)} /></div>
+                  <div><label className="label" htmlFor={`priority-${c.id}`}>Priority</label><input id={`priority-${c.id}`} name="priority" type="number" className="input" defaultValue={c.priority} /></div>
+                  <div><label className="label" htmlFor={`weight-${c.id}`}>Weight</label><input id={`weight-${c.id}`} name="weight" type="number" min={1} max={1000} className="input" defaultValue={c.weight} /></div>
+                  <div><label className="label" htmlFor={`starts_at-${c.id}`}>Start</label><input id={`starts_at-${c.id}`} name="starts_at" type="date" className="input" defaultValue={day(c.starts_at)} /></div>
+                  <div><label className="label" htmlFor={`ends_at-${c.id}`}>End</label><input id={`ends_at-${c.id}`} name="ends_at" type="date" className="input" defaultValue={day(c.ends_at)} /></div>
                 </ActionForm>
               </div>
               <div className="flex lg:flex-col gap-2">

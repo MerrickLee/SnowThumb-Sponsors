@@ -23,11 +23,11 @@ export default async function HouseAds() {
       </div>
       <ActionForm action={createHouseCampaign} submit="Create and add art" className="card p-5 grid md:grid-cols-3 gap-4 mb-8">
         <div>
-          <label className="label">Brand</label>
-          <select name="sponsor_id" className="select">{house.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
+          <label className="label" htmlFor="f-sponsor-id">Brand</label>
+          <select id="f-sponsor-id" name="sponsor_id" className="select">{house.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
         </div>
-        <div><label className="label">Campaign name</label><input name="name" className="input" required placeholder="House: Croes Ave fall" /></div>
-        <div><label className="label">Link</label><input name="link_url" className="input" placeholder="https://croesave.com" /></div>
+        <div><label className="label" htmlFor="f-name">Campaign name</label><input id="f-name" name="name" className="input" required placeholder="House: Croes Ave fall" /></div>
+        <div><label className="label" htmlFor="f-link-url">Link</label><input id="f-link-url" name="link_url" className="input" placeholder="https://croesave.com" /></div>
       </ActionForm>
       <div className="card overflow-x-auto">
         <table className="table">

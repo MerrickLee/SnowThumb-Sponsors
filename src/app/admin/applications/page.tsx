@@ -27,13 +27,16 @@ export default async function Applications({ searchParams }: PageProps<"/admin/a
         sub="From the sponsor form on snowthumb.com. Accepting creates the sponsor and emails them a sign-in invite."
         action={
           <div className="flex gap-2 text-sm">
-            <a className={`btn btn-sm ${show === "open" ? "btn-primary" : ""}`} href="?show=open">Open</a>
-            <a className={`btn btn-sm ${show === "all" ? "btn-primary" : ""}`} href="?show=all">All</a>
+            <a className={`btn btn-sm ${show === "open" ? "btn-primary" : ""}`} href="?show=open" aria-current={show === "open" ? "page" : undefined}>Open</a>
+            <a className={`btn btn-sm ${show === "all" ? "btn-primary" : ""}`} href="?show=all" aria-current={show === "all" ? "page" : undefined}>All</a>
           </div>
         }
       />
       {(apps ?? []).length === 0 ? (
-        <Empty>No applications {show === "open" ? "waiting" : "yet"}.</Empty>
+        <Empty title={show === "open" ? "No open applications" : "No applications yet"}
+          action={<a className="btn" href="/apply" target="_blank" rel="noreferrer">View the sponsor page</a>}>
+          New applications from the sponsor page land here. Share sponsors.snowthumb.com/apply with brands you&apos;re talking to.
+        </Empty>
       ) : (
         <div className="space-y-4">
           {apps!.map((a) => {

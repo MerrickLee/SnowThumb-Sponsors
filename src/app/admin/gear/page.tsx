@@ -30,33 +30,33 @@ export default async function GearAdmin() {
       <section className="mb-10">
         <h2 className="font-semibold mb-3">Add or update gear</h2>
         <ActionForm action={saveGear} submit="Save gear" className="card p-5 grid md:grid-cols-4 gap-4">
-          <div><label className="label">Gear ID</label><input name="id" className="input" required placeholder="board_acme_fall26" pattern="[a-z0-9_]{3,64}" />
+          <div><label className="label" htmlFor="f-id">Gear ID</label><input id="f-id" name="id" className="input" required placeholder="board_acme_fall26" pattern="[a-z0-9_]{3,64}" />
             <p className="text-xs text-muted mt-1">Permanent. Stored in player saves. Same ID updates.</p></div>
-          <div><label className="label">Kind</label><select name="kind" className="select"><option value="board">Board</option><option value="binding">Binding</option></select></div>
-          <div><label className="label">Base model</label><select name="base_model_id" className="select">
+          <div><label className="label" htmlFor="f-kind">Kind</label><select id="f-kind" name="kind" className="select"><option value="board">Board</option><option value="binding">Binding</option></select></div>
+          <div><label className="label" htmlFor="f-base-model-id">Base model</label><select id="f-base-model-id" name="base_model_id" className="select">
             {(slots ?? []).map((s) => <option key={s.id} value={s.base_model_id ?? s.id}>{s.label} ({s.base_model_id})</option>)}
           </select></div>
-          <div><label className="label">Display name</label><input name="name" className="input" required placeholder="Acme Fall Twin" /></div>
-          <div className="md:col-span-2"><label className="label">Sponsor art (approved creative)</label><select name="creative_id" className="select">
+          <div><label className="label" htmlFor="f-name">Display name</label><input id="f-name" name="name" className="input" required placeholder="Acme Fall Twin" /></div>
+          <div className="md:col-span-2"><label className="label" htmlFor="f-creative-id">Sponsor art (approved creative)</label><select id="f-creative-id" name="creative_id" className="select">
             <option value="">None: use the board&apos;s built-in art</option>
             {(creatives ?? []).map((c) => {
               const camp = (c.campaigns as unknown as { name: string } | null)?.name;
               const sp = (c.sponsors as unknown as { name: string } | null)?.name;
               return <option key={c.id} value={c.id}>{sp} · {camp} · {c.slot_id}</option>;
             })}
-          </select><p className="text-xs text-muted mt-1">Picking art also ties the gear to that sponsor&apos;s campaign dates.</p></div>
-          <div><label className="label">Sponsor (if no art)</label><select name="sponsor_id" className="select">
+          </select><p className="hint">Picking art also ties the gear to that sponsor&apos;s campaign dates.</p></div>
+          <div><label className="label" htmlFor="f-sponsor-id">Sponsor (if no art)</label><select id="f-sponsor-id" name="sponsor_id" className="select">
             <option value="">House / none</option>{(sponsors ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select></div>
-          <div><label className="label">Tagline</label><input name="tagline" className="input" placeholder="Built for rails" /></div>
-          <div><label className="label">Unlock by</label><select name="unlock" className="select">
+          <div><label className="label" htmlFor="f-tagline">Tagline</label><input id="f-tagline" name="tagline" className="input" placeholder="Built for rails" /></div>
+          <div><label className="label" htmlFor="f-unlock">Unlock by</label><select id="f-unlock" name="unlock" className="select">
             <option value="cred">Cred price</option><option value="score">Score threshold</option>
             <option value="challenge">Challenge only</option><option value="free">Free</option><option value="iap">In-app purchase</option>
           </select></div>
-          <div><label className="label">Cred price</label><input name="cred_price" type="number" min={0} className="input" placeholder="500" /></div>
-          <div><label className="label">Score threshold</label><input name="score_threshold" type="number" min={0} className="input" /></div>
-          <div><label className="label">IAP product ID</label><input name="iap_product_id" className="input" placeholder="com.snowthumb.board.x" /></div>
-          <div><label className="label">Sort</label><input name="sort" type="number" className="input" defaultValue={0} /></div>
+          <div data-unlock="cred"><label className="label" htmlFor="f-cred-price">Cred price</label><input id="f-cred-price" name="cred_price" type="number" min={0} className="input" placeholder="500" /></div>
+          <div data-unlock="score"><label className="label" htmlFor="f-score-threshold">Score threshold</label><input id="f-score-threshold" name="score_threshold" type="number" min={0} className="input" /></div>
+          <div data-unlock="iap"><label className="label" htmlFor="f-iap-product-id">IAP product ID</label><input id="f-iap-product-id" name="iap_product_id" className="input" placeholder="com.snowthumb.board.x" /></div>
+          <div><label className="label" htmlFor="f-sort">Sort</label><input id="f-sort" name="sort" type="number" className="input" defaultValue={0} /></div>
           <label className="flex items-center gap-2 text-sm md:col-span-3"><input type="checkbox" name="keep_after_end" defaultChecked />
             Players who unlocked it keep it after the campaign ends</label>
         </ActionForm>
@@ -85,22 +85,22 @@ export default async function GearAdmin() {
       <section>
         <h2 className="font-semibold mb-3">Add a challenge</h2>
         <ActionForm action={saveChallenge} submit="Add challenge" className="card p-5 grid md:grid-cols-4 gap-4">
-          <div className="md:col-span-2"><label className="label">Title</label><input name="title" className="input" required placeholder="Acme Rail Jam" /></div>
-          <div className="md:col-span-2"><label className="label">Description</label><input name="description" className="input" placeholder="Land 5 boardslides on rails in one run" /></div>
-          <div><label className="label">Scope</label><select name="scope" className="select"><option value="run">In one run</option><option value="total">Across all runs</option></select></div>
-          <div><label className="label">Feature</label><select name="feature" className="select">
-            {["any", "box", "tube", "rail", "jump"].map((f) => <option key={f} value={f}>{f}</option>)}</select></div>
+          <div className="md:col-span-2"><label className="label" htmlFor="f-title">Title</label><input id="f-title" name="title" className="input" required placeholder="Acme Rail Jam" /></div>
+          <div className="md:col-span-2"><label className="label" htmlFor="f-description">Description</label><input id="f-description" name="description" className="input" placeholder="Land 5 boardslides on rails in one run" /></div>
+          <div><label className="label" htmlFor="f-scope">Scope</label><select id="f-scope" name="scope" className="select"><option value="run">In one run</option><option value="total">Across all runs</option></select></div>
+          <div><label className="label" htmlFor="f-feature">Feature</label><select id="f-feature" name="feature" className="select">
+            {[["any", "Any feature"], ["box", "Box"], ["tube", "Tube"], ["rail", "Rail"], ["jump", "Jump"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
           <div><label className="label" htmlFor="trick">Trick</label><select id="trick" name="trick" className="select" defaultValue="any">
             {TRICKS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select></div>
-          <div><label className="label">Target count</label><input name="target_count" type="number" min={1} className="input" defaultValue={1} /></div>
-          <div><label className="label">Min run points</label><input name="min_points" type="number" min={0} className="input" defaultValue={0} /></div>
-          <div><label className="label">Reward gear</label><select name="reward_gear_id" className="select">
+          <div><label className="label" htmlFor="f-target-count">Target count</label><input id="f-target-count" name="target_count" type="number" min={1} className="input" defaultValue={1} /></div>
+          <div><label className="label" htmlFor="f-min-points">Min run points</label><input id="f-min-points" name="min_points" type="number" min={0} className="input" defaultValue={0} /></div>
+          <div><label className="label" htmlFor="f-reward-gear-id">Reward gear</label><select id="f-reward-gear-id" name="reward_gear_id" className="select">
             <option value="">None</option>{(gear ?? []).map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</select></div>
-          <div><label className="label">Sponsor (if no reward)</label><select name="sponsor_id" className="select">
+          <div><label className="label" htmlFor="f-sponsor-id-2">Sponsor (if no reward)</label><select id="f-sponsor-id-2" name="sponsor_id" className="select">
             <option value="">House / none</option>{(sponsors ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
-          <div><label className="label">Start</label><input name="starts_at" type="date" className="input" /></div>
-          <div><label className="label">End</label><input name="ends_at" type="date" className="input" /></div>
+          <div><label className="label" htmlFor="f-starts-at">Start</label><input id="f-starts-at" name="starts_at" type="date" className="input" /></div>
+          <div><label className="label" htmlFor="f-ends-at">End</label><input id="f-ends-at" name="ends_at" type="date" className="input" /></div>
         </ActionForm>
 
         <div className="card overflow-x-auto mt-4">
