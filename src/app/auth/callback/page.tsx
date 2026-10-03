@@ -21,11 +21,15 @@ function Callback() {
       const code = params.get("code");
       const hash = new URLSearchParams(window.location.hash.slice(1));
       const errDesc = params.get("error_description") || hash.get("error_description");
-      if (errDesc) return setError(errDesc);
+      const nice = (m: string) =>
+        /code verifier|both auth code and code verifier/i.test(m)
+          ? "This link was opened in a different browser than the one that requested it. Request a new link and open it here."
+          : /expired|invalid|not found/i.test(m) ? "This sign-in link has expired or was already used. Only the newest link works." : m;
+      if (errDesc) return setError(nice(errDesc));
 
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (error) return setError(error.message);
+        if (error) return setError(nice(error.message));
       } else if (hash.get("access_token") && hash.get("refresh_token")) {
         const { error } = await supabase.auth.setSession({
           access_token: hash.get("access_token")!,
@@ -46,7 +50,7 @@ function Callback() {
         <div className="card p-5 max-w-sm text-sm">
           <p className="text-bad font-semibold">Sign-in didn&apos;t work</p>
           <p className="mt-2 text-muted">{error}</p>
-          <a className="btn mt-4" href="/login">Back to sign in</a>
+          <a className="btn btn-primary mt-4" href="/login">Get a new link</a>
         </div>
       ) : (
         <p className="text-muted">Signing you in…</p>

@@ -49,7 +49,7 @@ export async function acceptApplication(_: AdminState, form: FormData): Promise<
   const admin = createAdminClient();
   let userId: string | null = null;
   const { data: invited, error: invErr } = await admin.auth.admin.inviteUserByEmail(app.contact_email, {
-    redirectTo: `${env.siteUrl}/auth/callback?next=/portal`,
+    redirectTo: `${env.siteUrl}/portal`,
     data: { sponsor_id: sponsor.id },
   });
   if (invited?.user) userId = invited.user.id;

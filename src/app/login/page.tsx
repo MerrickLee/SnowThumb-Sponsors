@@ -14,7 +14,9 @@ function LoginForm() {
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
   const [error, setError] = useState("");
   const [wait, setWait] = useState(0);
-  const noSponsor = params.get("error") === "no_sponsor";
+  const urlError = params.get("error");
+  const noSponsor = urlError === "no_sponsor";
+  const linkProblem = urlError === "link_expired" || urlError === "link_invalid";
 
   useEffect(() => {
     if (wait <= 0) return;
@@ -40,8 +42,10 @@ function LoginForm() {
       const m = error.message.toLowerCase();
       if (m.includes("signups not allowed") || m.includes("not found") || error.status === 422) {
         setError("That email doesn't have access yet. If you applied to sponsor, we'll send an invite once you're approved.");
-      } else if (m.includes("rate") || error.status === 429) {
-        setError("Too many sign-in emails in a short time. Wait a minute and try again.");
+      } else if (m.includes("rate") || m.includes("security purposes") || error.status === 429) {
+        const secs = Number(error.message.match(/(\d+)\s*second/)?.[1] ?? 60);
+        setWait(secs);
+        setError(`For security, you can request a new link in ${secs} seconds. Use the newest email we sent; older links stop working.`);
       } else {
         setError(error.message);
       }
@@ -61,6 +65,13 @@ function LoginForm() {
             <h1 className="title text-4xl mt-2">Sign in</h1>
             <p className="text-muted mt-2">We&apos;ll email you a one-time link. No password to remember.</p>
 
+            {linkProblem && (
+              <div className="notice notice-warn mt-5" role="status">
+                {urlError === "link_expired"
+                  ? "That sign-in link has expired or was already used. Each link works once, and only the newest one works. Request a fresh link below."
+                  : "That sign-in link didn't work. Request a fresh link below."}
+              </div>
+            )}
             {noSponsor && (
               <div className="notice notice-warn mt-5">Your account isn&apos;t linked to a sponsor yet. Email sponsors@snowthumb.com and we&apos;ll finish setup.</div>
             )}
@@ -76,7 +87,7 @@ function LoginForm() {
                   </button>
                   <button className="btn btn-ghost" onClick={() => { setState("idle"); setError(""); }}>Use a different email</button>
                 </div>
-                <p className="text-sm text-muted">Not seeing it? Check spam or promotions, and make sure this is the address your invite went to.</p>
+                <p className="text-sm text-muted">Not seeing it? Check spam or promotions. Only the newest link works, and you can open it on any device.</p>
               </div>
             ) : (
               <form onSubmit={send} className="mt-6 space-y-4" noValidate>
@@ -87,8 +98,8 @@ function LoginForm() {
                     aria-invalid={error ? true : undefined} aria-describedby={error ? "login-error" : undefined} />
                 </div>
                 {error && <p id="login-error" className="text-sm text-bad" role="alert">{error}</p>}
-                <button className="btn btn-primary w-full" disabled={state === "sending"}>
-                  {state === "sending" ? "Sending link…" : "Email me a sign-in link"}
+                <button className="btn btn-primary w-full" disabled={state === "sending" || wait > 0}>
+                  {state === "sending" ? "Sending link…" : wait > 0 ? `Try again in ${wait}s` : "Email me a sign-in link"}
                 </button>
               </form>
             )}
