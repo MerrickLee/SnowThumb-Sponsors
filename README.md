@@ -1,4 +1,14 @@
-# SnowThumb Sponsors (web)
+# SnowThumb Sponsors
+
+One repo for the whole sponsor platform:
+
+- `src/`: the Next.js web app (this README)
+- `supabase/`: database migration + edge functions (deployed to `estcsgjculwlrtklidic`)
+- `unity/`: reference copy of the game scripts (the live copies are in the SnowThumb Unity repo)
+- `PLATFORM.md`: how the whole system works, slot specs, build phases
+- `HANDOFF_PROMPTS.md`: prompts for other AI agents
+
+## Web app
 
 Sponsor intake, sponsor portal, admin review and campaign dashboards for SnowThumb.
 Next.js 16 (App Router) on Vercel, backed by the SnowThumb Supabase project `estcsgjculwlrtklidic`.
