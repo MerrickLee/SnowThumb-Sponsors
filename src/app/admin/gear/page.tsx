@@ -4,6 +4,14 @@ import { ActionForm } from "@/components/ActionForm";
 import { saveChallenge, saveGear, toggleChallenge, toggleGear } from "@/app/admin/actions";
 import { campaignDates } from "@/lib/format";
 
+const TRICKS: [string, string][] = [
+  ["any", "Any trick"], ["50_50", "50-50"], ["boardslide", "Boardslide"], ["lipslide", "Lipslide"],
+  ["nose_press", "Nose press"], ["tail_press", "Tail press"],
+  ["spin_out_180", "180 out"], ["spin_out_360", "360 out"], ["spin_out_540", "540 out"],
+  ["feature_spin_180", "180 feature spin"], ["feature_spin_360", "360 feature spin"],
+  ["tabletop_straight", "Straight air (tabletop)"], ["tabletop_180", "Tabletop 180"], ["tabletop_360", "Tabletop 360"], ["tabletop_540", "Tabletop 540"],
+];
+
 export default async function GearAdmin() {
   const supabase = await createClient();
   const [{ data: gear }, { data: challenges }, { data: slots }, { data: creatives }, { data: sponsors }] = await Promise.all([
@@ -78,12 +86,13 @@ export default async function GearAdmin() {
         <h2 className="font-semibold mb-3">Add a challenge</h2>
         <ActionForm action={saveChallenge} submit="Add challenge" className="card p-5 grid md:grid-cols-4 gap-4">
           <div className="md:col-span-2"><label className="label">Title</label><input name="title" className="input" required placeholder="Acme Rail Jam" /></div>
-          <div className="md:col-span-2"><label className="label">Description</label><input name="description" className="input" placeholder="Land 5 board slides on rails in one run" /></div>
+          <div className="md:col-span-2"><label className="label">Description</label><input name="description" className="input" placeholder="Land 5 boardslides on rails in one run" /></div>
           <div><label className="label">Scope</label><select name="scope" className="select"><option value="run">In one run</option><option value="total">Across all runs</option></select></div>
           <div><label className="label">Feature</label><select name="feature" className="select">
             {["any", "box", "tube", "rail", "jump"].map((f) => <option key={f} value={f}>{f}</option>)}</select></div>
-          <div><label className="label">Trick</label><input name="trick" className="input" defaultValue="any" placeholder="board_slide" />
-            <p className="text-xs text-muted mt-1">&quot;any&quot; or a trick id from the game.</p></div>
+          <div><label className="label" htmlFor="trick">Trick</label><select id="trick" name="trick" className="select" defaultValue="any">
+            {TRICKS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select></div>
           <div><label className="label">Target count</label><input name="target_count" type="number" min={1} className="input" defaultValue={1} /></div>
           <div><label className="label">Min run points</label><input name="min_points" type="number" min={0} className="input" defaultValue={0} /></div>
           <div><label className="label">Reward gear</label><select name="reward_gear_id" className="select">

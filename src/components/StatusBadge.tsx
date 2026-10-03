@@ -1,26 +1,37 @@
 const TONE: Record<string, string> = {
-  draft: "text-muted border-line",
-  pending: "text-warn border-warn/40",
-  submitted: "text-warn border-warn/40",
-  approved: "text-ok border-ok/40",
-  rejected: "text-bad border-bad/40",
-  paused: "text-muted border-line",
-  archived: "text-muted border-line",
-  retired: "text-muted border-line",
-  new: "text-accent border-accent/40",
-  contacted: "text-warn border-warn/40",
-  accepted: "text-ok border-ok/40",
-  declined: "text-muted border-line",
+  draft: "bg-surface-2 text-muted border-line",
+  pending: "bg-warn-soft text-warn border-warn/30",
+  submitted: "bg-warn-soft text-warn border-warn/30",
+  approved: "bg-ok-soft text-ok border-ok/30",
+  rejected: "bg-bad-soft text-bad border-bad/30",
+  paused: "bg-surface-2 text-muted border-line",
+  archived: "bg-surface-2 text-muted border-line",
+  retired: "bg-surface-2 text-muted border-line",
+  new: "bg-accent-soft text-accent border-accent/30",
+  contacted: "bg-warn-soft text-warn border-warn/30",
+  accepted: "bg-ok-soft text-ok border-ok/30",
+  declined: "bg-surface-2 text-muted border-line",
 };
 
 const LABEL: Record<string, string> = {
-  submitted: "in review",
-  rejected: "changes requested",
+  submitted: "In review",
+  rejected: "Changes requested",
+  approved: "Approved",
+  pending: "Pending review",
+  draft: "Draft",
+  paused: "Paused",
+  archived: "Archived",
+  retired: "Removed",
+  new: "New",
+  contacted: "Contacted",
+  accepted: "Accepted",
+  declined: "Declined",
 };
 
 export function StatusBadge({ status }: { status: string }) {
   return (
-    <span className={`inline-block text-xs font-semibold uppercase tracking-wide border rounded-full px-2 py-0.5 ${TONE[status] ?? "text-muted border-line"}`}>
+    <span className={`inline-flex items-center gap-1.5 text-xs font-bold border rounded-full px-2.5 py-1 whitespace-nowrap ${TONE[status] ?? "bg-surface-2 text-muted border-line"}`}>
+      <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-current" />
       {LABEL[status] ?? status}
     </span>
   );

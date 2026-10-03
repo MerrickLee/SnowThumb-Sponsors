@@ -1,12 +1,8 @@
-import Link from "next/link";
-
-type NavItem = { href: string; label: string };
+import { Footer, Logo } from "@/components/Brand";
+import { NavLinks, type NavItem } from "@/components/NavLinks";
 
 export function Shell({
-  area,
-  nav,
-  email,
-  children,
+  area, nav, email, children,
 }: {
   area: string;
   nav: NavItem[];
@@ -15,44 +11,47 @@ export function Shell({
 }) {
   return (
     <div className="flex-1 flex flex-col">
-      <header className="border-b border-line bg-surface/60 backdrop-blur sticky top-0 z-10">
-        <div className="mx-auto max-w-6xl px-4 h-14 flex items-center gap-6">
-          <Link href="/" className="flex items-baseline gap-2 shrink-0">
-            <span className="font-semibold tracking-tight">SnowThumb</span>
-            <span className="text-xs text-accent uppercase tracking-[.18em]">{area}</span>
-          </Link>
-          <nav className="flex gap-1 overflow-x-auto text-sm">
-            {nav.map((n) => (
-              <Link key={n.href} href={n.href} className="px-3 py-1.5 rounded-md text-muted hover:text-text hover:bg-surface-2 whitespace-nowrap">
-                {n.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="ml-auto flex items-center gap-3 text-sm">
-            <span className="text-muted hidden md:inline">{email}</span>
-            <form action="/auth/signout" method="post">
-              <button className="btn btn-sm">Sign out</button>
-            </form>
+      <header className="bg-surface/90 backdrop-blur border-b border-line sticky top-0 z-20">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="h-14 flex items-center gap-4">
+            <Logo height={24} />
+            <span className="eyebrow text-sky hidden sm:inline">{area}</span>
+            <div className="hidden md:block ml-4 min-w-0"><NavLinks items={nav} /></div>
+            <div className="ml-auto flex items-center gap-3 text-sm">
+              <span className="text-muted hidden lg:inline truncate max-w-56" title={email}>{email}</span>
+              <form action="/auth/signout" method="post">
+                <button className="btn btn-sm btn-ghost">Sign out</button>
+              </form>
+            </div>
           </div>
+          <div className="md:hidden pb-2"><NavLinks items={nav} /></div>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl w-full px-4 py-8 flex-1">{children}</main>
+      <main id="main" className="mx-auto max-w-6xl w-full px-4 py-6 md:py-10 flex-1">{children}</main>
+      <Footer />
     </div>
   );
 }
 
-export function PageHeader({ title, sub, action }: { title: string; sub?: string; action?: React.ReactNode }) {
+export function PageHeader({ title, sub, action, eyebrow }: { title: string; sub?: React.ReactNode; action?: React.ReactNode; eyebrow?: string }) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-        {sub && <p className="text-muted text-sm mt-1">{sub}</p>}
+    <div className="flex flex-wrap items-end justify-between gap-4 mb-6 md:mb-8">
+      <div className="min-w-0">
+        {eyebrow && <p className="eyebrow text-sky mb-2">{eyebrow}</p>}
+        <h1 className="title text-3xl md:text-4xl">{title}</h1>
+        {sub && <p className="text-muted mt-2 max-w-2xl">{sub}</p>}
       </div>
-      {action}
+      {action && <div className="flex flex-wrap gap-2">{action}</div>}
     </div>
   );
 }
 
-export function Empty({ children }: { children: React.ReactNode }) {
-  return <div className="card p-8 text-center text-muted text-sm">{children}</div>;
+export function Empty({ title, children, action }: { title?: string; children: React.ReactNode; action?: React.ReactNode }) {
+  return (
+    <div className="card p-8 md:p-10 text-center">
+      {title && <p className="title text-xl mb-2">{title}</p>}
+      <div className="text-muted max-w-md mx-auto">{children}</div>
+      {action && <div className="mt-5 flex justify-center">{action}</div>}
+    </div>
+  );
 }

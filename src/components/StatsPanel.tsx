@@ -19,8 +19,8 @@ export function Kpis({ rows }: { rows: DailyStat[] }) {
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {tiles.map((k) => (
         <div key={k.label} className="card p-4">
-          <p className="text-xs text-muted uppercase tracking-wide">{k.label}</p>
-          <p className="text-2xl font-semibold mt-1 num">{k.value}</p>
+          <p className="text-xs font-bold text-muted">{k.label}</p>
+          <p className="text-2xl md:text-3xl font-black mt-1 num">{k.value}</p>
         </div>
       ))}
     </div>
@@ -35,12 +35,20 @@ export function StatsPanel({
 }) {
   const slots = breakdown(rows, "slot_id");
   const gear = breakdown(rows, "gear_item_id");
+  if (rows.length === 0) {
+    return (
+      <div className="card p-8 md:p-10 text-center">
+        <p className="title text-xl">No data for these dates yet.</p>
+        <p className="text-muted mt-2 max-w-md mx-auto">Numbers appear once an approved campaign is live and players ride with it. Stats refresh every hour, and days are Eastern time.</p>
+      </div>
+    );
+  }
   return (
     <div className="space-y-6">
       <Kpis rows={rows} />
       <div className="card p-4">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="font-semibold">Daily performance</h2>
+          <h2 className="font-bold">Daily performance</h2>
           <CsvButton rows={rows} names={names} filename={csvName} />
         </div>
         <StatsChart data={byDay(rows, from, to)} />
@@ -61,7 +69,7 @@ function Breakdown({
 }) {
   return (
     <div className="card overflow-x-auto">
-      <h2 className="font-semibold px-4 pt-4">{title}</h2>
+      <h2 className="font-bold px-4 pt-4">{title}</h2>
       {rows.length === 0 ? (
         <p className="text-sm text-muted p-4">No data yet.</p>
       ) : (

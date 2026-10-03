@@ -1,11 +1,20 @@
 import Link from "next/link";
 import { requireSponsor } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { Empty, PageHeader } from "@/components/Shell";
+import { PageHeader } from "@/components/Shell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { fmt } from "@/lib/stats";
+import { campaignDates } from "@/lib/format";
 import type { Campaign } from "@/lib/types";
-import { campaignDates as dates } from "@/lib/format";
+
+const NEXT_STEP: Record<Campaign["status"], string> = {
+  draft: "Add art and submit for review",
+  rejected: "Review our notes and resubmit",
+  submitted: "We're reviewing it",
+  approved: "Live in the app",
+  paused: "Paused by SnowThumb",
+  archived: "Archived",
+};
 
 export default async function PortalHome() {
   const s = await requireSponsor();
@@ -17,41 +26,84 @@ export default async function PortalHome() {
   const t = Object.fromEntries((totals ?? []).map((r) => [r.campaign_id, r]));
   const sponsorName = Object.fromEntries(s.sponsors.map((x) => [x.id, x.name]));
   const list = (campaigns ?? []) as Campaign[];
+  const needsAction = list.filter((c) => c.status === "draft" || c.status === "rejected");
+  const name = s.sponsors.length === 1 ? s.sponsors[0].name : "Your campaigns";
+
+  if (list.length === 0) return <Welcome name={s.sponsors[0]?.name} />;
 
   return (
     <>
-      <PageHeader
-        title={s.sponsors.length === 1 ? s.sponsors[0].name : "Your campaigns"}
-        sub="Upload art, submit it for review, and track how players see it. Approved art goes live in the app without an app update."
-        action={<Link href="/portal/campaigns/new" className="btn btn-primary">New campaign</Link>}
-      />
-      {list.length === 0 ? (
-        <Empty>No campaigns yet. Start one to pick your placements and upload art.</Empty>
-      ) : (
-        <div className="card overflow-x-auto">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Campaign</th>{s.sponsors.length > 1 && <th>Sponsor</th>}<th>Status</th><th>Dates</th>
-                <th className="text-right">Impr.</th><th className="text-right">Clicks</th><th className="text-right">Equips</th>
-              </tr>
-            </thead>
-            <tbody>
-              {list.map((c) => (
-                <tr key={c.id}>
-                  <td><Link className="link" href={`/portal/campaigns/${c.id}`}>{c.name}</Link></td>
-                  {s.sponsors.length > 1 && <td className="text-muted">{sponsorName[c.sponsor_id]}</td>}
-                  <td><StatusBadge status={c.status} /></td>
-                  <td className="text-muted text-sm num">{dates(c)}</td>
-                  <td className="text-right num">{fmt(t[c.id]?.impressions ?? 0)}</td>
-                  <td className="text-right num">{fmt(t[c.id]?.clicks ?? 0)}</td>
-                  <td className="text-right num">{fmt(t[c.id]?.gear_equips ?? 0)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <PageHeader eyebrow="Sponsor console" title={name}
+        sub="Approved art reaches players on their next app open. No app update needed."
+        action={<Link href="/portal/campaigns/new" className="btn btn-primary">New campaign</Link>} />
+
+      {needsAction.length > 0 && (
+        <div className="notice notice-info mb-6 flex flex-wrap items-center justify-between gap-3">
+          <span><strong>{needsAction.length} campaign{needsAction.length > 1 ? "s" : ""}</strong> need{needsAction.length === 1 ? "s" : ""} your attention.</span>
+          <Link className="link" href={`/portal/campaigns/${needsAction[0].id}`}>Open {needsAction[0].name}</Link>
         </div>
       )}
+
+      <ul className="grid gap-3">
+        {list.map((c) => (
+          <li key={c.id}>
+            <Link href={`/portal/campaigns/${c.id}`} className="card p-4 md:p-5 grid md:grid-cols-[1fr_auto] gap-4 items-center hover:border-accent transition-colors">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="font-bold text-lg truncate">{c.name}</h2>
+                  <StatusBadge status={c.status} />
+                </div>
+                <p className="text-sm text-muted mt-1">
+                  {s.sponsors.length > 1 && <>{sponsorName[c.sponsor_id]} · </>}
+                  {campaignDates(c)} · {NEXT_STEP[c.status]}
+                </p>
+              </div>
+              <dl className="grid grid-cols-3 gap-4 md:gap-8 text-right">
+                <Stat label="Impressions" value={t[c.id]?.impressions} />
+                <Stat label="Clicks" value={t[c.id]?.clicks} />
+                <Stat label="Equips" value={t[c.id]?.gear_equips} />
+              </dl>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+function Stat({ label, value }: { label: string; value?: number | null }) {
+  return (
+    <div>
+      <dt className="text-xs text-muted">{label}</dt>
+      <dd className="font-black text-xl num">{fmt(Number(value ?? 0))}</dd>
+    </div>
+  );
+}
+
+function Welcome({ name }: { name?: string }) {
+  const steps = [
+    { t: "Create a campaign", d: "Name it, add the link players will visit, and set dates." },
+    { t: "Upload your art", d: "Pick placements and upload art. We check sizes before you upload." },
+    { t: "Submit for review", d: "We approve it, usually quickly, and it goes live on players' next app open." },
+    { t: "Watch it perform", d: "Impressions, time on screen, gear unlocks, equips and clicks, updated hourly." },
+  ];
+  return (
+    <>
+      <PageHeader eyebrow="Welcome" title={name ? `Welcome, ${name}.` : "Welcome to SnowThumb."}
+        sub="Here's how sponsoring works. Your first campaign takes about ten minutes." />
+      <ol className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {steps.map((s, i) => (
+          <li key={s.t} className="card p-5">
+            <p className="text-sky font-black text-2xl num">0{i + 1}</p>
+            <p className="font-bold text-lg mt-2">{s.t}</p>
+            <p className="text-muted text-sm mt-1">{s.d}</p>
+          </li>
+        ))}
+      </ol>
+      <div className="flex flex-wrap gap-3 mt-8">
+        <Link href="/portal/campaigns/new" className="btn btn-primary">Create your first campaign</Link>
+        <Link href="/portal/guide" className="btn">Read the art guide</Link>
+      </div>
     </>
   );
 }

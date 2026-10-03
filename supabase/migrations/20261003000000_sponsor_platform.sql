@@ -757,3 +757,28 @@ select cron.schedule(
   '7 * * * *',
   $cron$select public.rollup_campaign_stats();$cron$
 );
+
+-- ---------- Hardening (from Supabase advisors) ----------------------
+revoke execute on function public.is_admin()                    from public, anon;
+revoke execute on function public.is_sponsor_member(uuid)       from public, anon;
+revoke execute on function public.is_sponsor_member_text(text)  from public, anon;
+grant  execute on function public.is_admin()                    to authenticated, service_role;
+grant  execute on function public.is_sponsor_member(uuid)       to authenticated, service_role;
+grant  execute on function public.is_sponsor_member_text(text)  to authenticated, service_role;
+
+create index if not exists campaigns_approved_by_idx            on public.campaigns (approved_by);
+create index if not exists campaigns_created_by_idx             on public.campaigns (created_by);
+create index if not exists challenges_campaign_idx              on public.challenges (campaign_id);
+create index if not exists challenges_reward_gear_idx           on public.challenges (reward_gear_id);
+create index if not exists creatives_reviewed_by_idx            on public.creatives (reviewed_by);
+create index if not exists creatives_slot_idx                   on public.creatives (slot_id);
+create index if not exists gear_items_campaign_idx              on public.gear_items (campaign_id);
+create index if not exists gear_items_creative_idx              on public.gear_items (creative_id);
+create index if not exists sponsor_applications_reviewed_by_idx on public.sponsor_applications (reviewed_by);
+create index if not exists sponsor_applications_sponsor_idx     on public.sponsor_applications (sponsor_id);
+
+-- Admins can upload house creatives on behalf of any sponsor
+create policy "sponsor-uploads admin insert" on storage.objects for insert to authenticated
+  with check (bucket_id = 'sponsor-uploads' and public.is_admin());
+create policy "sponsor-uploads admin update" on storage.objects for update to authenticated
+  using (bucket_id = 'sponsor-uploads' and public.is_admin());

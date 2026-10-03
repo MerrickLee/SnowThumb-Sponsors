@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { requireSponsor } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/Shell";
@@ -5,6 +6,8 @@ import { RangePicker } from "@/components/RangePicker";
 import { StatsPanel } from "@/components/StatsPanel";
 import { easternDate } from "@/lib/stats";
 import type { DailyStat } from "@/lib/types";
+
+export const metadata: Metadata = { title: "Performance" };
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -29,7 +32,7 @@ export default async function PortalStats({ searchParams }: PageProps<"/portal/s
 
   return (
     <>
-      <PageHeader title="Performance" sub="Impressions count when your art is on screen for at least a second during a run." />
+      <PageHeader eyebrow="Performance" title="How players see your brand" sub="An impression counts when your art is on screen for at least one second during a run. Updated hourly." />
       <div className="mb-6"><RangePicker from={from} to={to} campaigns={campaigns ?? []} /></div>
       <StatsPanel rows={(rows ?? []) as DailyStat[]} from={from} to={to} names={names} slotLabels={slotLabels}
         csvName={`snowthumb-performance-${from}-to-${to}.csv`} />

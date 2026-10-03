@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { easternDayToIso } from "@/lib/format";
+import { friendly } from "@/lib/errors";
 
 export type ActionState = { error?: string; ok?: string };
 
@@ -26,8 +27,9 @@ export async function createCampaign(_: ActionState, form: FormData): Promise<Ac
   const sponsor_id = String(form.get("sponsor_id") ?? "");
   const f = fields(form);
   if (!f.name) return { error: "Give the campaign a name." };
+  if (f.starts_at && f.ends_at && f.ends_at <= f.starts_at) return { error: "The end date needs to be after the start date." };
   const { data, error } = await supabase.from("campaigns").insert({ sponsor_id, ...f }).select("id").single();
-  if (error) return { error: error.message };
+  if (error) return { error: friendly(error.message) };
   redirect(`/portal/campaigns/${data.id}`);
 }
 
@@ -36,10 +38,11 @@ export async function updateCampaign(_: ActionState, form: FormData): Promise<Ac
   const id = String(form.get("id") ?? "");
   const f = fields(form);
   if (!f.name) return { error: "Give the campaign a name." };
+  if (f.starts_at && f.ends_at && f.ends_at <= f.starts_at) return { error: "The end date needs to be after the start date." };
   const { error } = await supabase.from("campaigns").update(f).eq("id", id);
-  if (error) return { error: error.message };
+  if (error) return { error: friendly(error.message) };
   revalidatePath(`/portal/campaigns/${id}`);
-  return { ok: "Saved." };
+  return { ok: "Changes saved." };
 }
 
 export async function submitCampaign(_: ActionState, form: FormData): Promise<ActionState> {
@@ -50,10 +53,10 @@ export async function submitCampaign(_: ActionState, form: FormData): Promise<Ac
   const { data: c } = await supabase.from("campaigns").select("link_url").eq("id", id).single();
   if (!c?.link_url) return { error: "Add the link players will visit before submitting." };
   const { error } = await supabase.from("campaigns").update({ status: "submitted" }).eq("id", id);
-  if (error) return { error: error.message };
+  if (error) return { error: friendly(error.message) };
   revalidatePath(`/portal/campaigns/${id}`);
   revalidatePath("/portal");
-  return { ok: "Submitted. We'll review it and you'll see the status change here." };
+  return { ok: "Submitted for review. The status here changes as soon as we approve it or send notes." };
 }
 
 export async function deleteDraft(form: FormData) {
