@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SnowThumb Sponsors (web)
 
-## Getting Started
+Sponsor intake, sponsor portal, admin review and campaign dashboards for SnowThumb.
+Next.js 16 (App Router) on Vercel, backed by the SnowThumb Supabase project `estcsgjculwlrtklidic`.
 
-First, run the development server:
+## What's in it
+
+| Route | Who | What |
+|---|---|---|
+| `/apply` | Public | Sponsor landing page + application form (posts to `sponsor-apply`) |
+| `/login` | Invited sponsors, admins | Magic-link sign in (no open sign-up) |
+| `/portal` | Sponsors | Campaigns, per-slot art upload with exact-size checks, submit for review |
+| `/portal/stats` | Sponsors | KPIs, daily chart, placement and gear breakdowns, CSV export (only their data, via RLS) |
+| `/admin` | Admins | Queue counts, event health, live manifest preview, all-sponsor stats |
+| `/admin/applications` | Admins | Review applications, Accept + invite (creates sponsor, emails invite, links user) |
+| `/admin/review` | Admins | Preview art on slot mockups; Approve + publish (calls `review` function) or send back |
+| `/admin/campaigns` | Admins | Priority, weight, dates; pause / resume / archive |
+| `/admin/gear` | Admins | Gear items and challenges |
+| `/admin/house` | Admins | Croes Ave / Love Capital house campaigns (priority 0) |
+| `/embed/sponsor-form.html` | Public | Drop-in form snippet for snowthumb.com if that site isn't this app |
+
+Security is Row Level Security in Supabase. The browser only ever has the publishable key. The service-role key is used in one server action (accepting an application, to send the auth invite).
+
+## Deploy (Vercel)
+
+1. Push this folder to a GitHub repo, import it in Vercel.
+2. Environment variables (Production + Preview), from `.env.example`:
+   - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_FUNCTIONS_URL` (already filled in)
+   - `NEXT_PUBLIC_SITE_URL` = `https://[DASHBOARD_DOMAIN]`, e.g. `https://sponsors.snowthumb.com`
+   - `SUPABASE_SERVICE_ROLE_KEY` = Supabase → Project Settings → API Keys → secret key. **Server only.**
+3. Add the domain in Vercel.
+4. Supabase → Authentication → URL Configuration:
+   - Site URL: `https://[DASHBOARD_DOMAIN]`
+   - Redirect URLs: `https://[DASHBOARD_DOMAIN]/auth/callback`, `http://localhost:3000/auth/callback`
+5. Supabase → Edge Functions → Secrets:
+   - `DASHBOARD_ORIGINS=https://[DASHBOARD_DOMAIN],http://localhost:3000` (lets the review buttons call the `review` function)
+   - `INTAKE_ALLOWED_ORIGINS=https://snowthumb.com,https://www.snowthumb.com,https://[DASHBOARD_DOMAIN]` (lets `/apply` post)
+6. Make yourself admin: invite yourself in Supabase → Authentication → Users, accept, then run
+   `insert into app_admins (user_id) select id from auth.users where email = '[YOUR_ADMIN_EMAIL]';`
+
+## Local dev
 
 ```bash
+cp .env.example .env.local   # fill SUPABASE_SERVICE_ROLE_KEY and set NEXT_PUBLIC_SITE_URL=http://localhost:3000
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Sponsor landing page on snowthumb.com
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Two options:
+- **Link** your existing sponsor page's call-to-action to `https://[DASHBOARD_DOMAIN]/apply`, or
+- **Embed** `public/embed/sponsor-form.html` in the existing page (paste into a custom HTML block). It already posts to the live function, and snowthumb.com is already an allowed origin.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Verified
 
-## Learn More
+- `next build` and `eslint` pass.
+- `/apply`, `/login`, `/embed/sponsor-form.html` render; `/admin` and `/portal` redirect signed-out users to `/login`.
+- Against the live database (in a rolled-back transaction): sponsor sees only their sponsor, can create a campaign, upsert/replace a creative, submit; isn't an admin. Admin sees all sponsors, can create house campaigns (priority 0), gear and challenges.
 
-To learn more about Next.js, take a look at the following resources:
+## Not verified yet (needs the deployed site)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Magic-link and invite emails end to end (depends on Supabase Auth URL settings above).
+- Browser upload → Approve + publish → manifest. Run it once with a house banner after deploy (README Phase 2 in the platform package).
+- Supabase's built-in email sender is rate-limited and meant for testing. Set up custom SMTP (Authentication → Emails) before inviting real sponsors.

@@ -1,0 +1,86 @@
+<!--
+  SnowThumb sponsor intake form: drop-in snippet for snowthumb.com/sponsors
+  Works on any site (Next.js, GHL custom HTML block, Webflow embed, plain HTML).
+  Posts to the Supabase sponsor-apply function. The page's origin must be listed
+  in the INTAKE_ALLOWED_ORIGINS secret (snowthumb.com and www.snowthumb.com are by default).
+  Restyle freely; keep the field names and the hidden company_fax honeypot.
+-->
+<form id="st-sponsor-form" class="st-form" action="https://estcsgjculwlrtklidic.supabase.co/functions/v1/sponsor-apply"
+      method="post" enctype="multipart/form-data" novalidate>
+  <div class="st-grid">
+    <label>Company<input name="company_name" required></label>
+    <label>Website<input name="website_url" placeholder="yourbrand.com"></label>
+    <label>Your name<input name="contact_name" required autocomplete="name"></label>
+    <label>Work email<input name="contact_email" type="email" required autocomplete="email"></label>
+  </div>
+
+  <fieldset>
+    <legend>What are you interested in?</legend>
+    <label class="st-check"><input type="checkbox" name="interested_slots" value="banner"> Park banners</label>
+    <label class="st-check"><input type="checkbox" name="interested_slots" value="feature_wrap"> Feature wraps (rails, boxes, kickers)</label>
+    <label class="st-check"><input type="checkbox" name="interested_slots" value="board"> Sponsored board</label>
+    <label class="st-check"><input type="checkbox" name="interested_slots" value="binding"> Sponsored bindings</label>
+    <label class="st-check"><input type="checkbox" name="interested_slots" value="event_title"> Night session title sponsor</label>
+  </fieldset>
+
+  <div class="st-grid">
+    <label>Monthly budget
+      <select name="budget_range">
+        <option value="">Pick one</option>
+        <option>Under $500 / mo</option><option>$500 to $2,000 / mo</option>
+        <option>$2,000 to $5,000 / mo</option><option>$5,000+ / mo</option><option>Not sure yet</option>
+      </select>
+    </label>
+    <label>Logo (optional, up to 5 MB)<input name="logo" type="file" accept="image/png,image/jpeg,image/svg+xml,application/pdf"></label>
+  </div>
+  <label>Anything else?<textarea name="message" rows="4"></textarea></label>
+
+  <!-- Honeypot: leave empty -->
+  <div aria-hidden="true" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden">
+    <label>Fax<input name="company_fax" tabindex="-1" autocomplete="off"></label>
+  </div>
+  <input type="hidden" name="source_page">
+
+  <button type="submit">Apply to sponsor</button>
+  <p class="st-msg" role="status" aria-live="polite"></p>
+</form>
+
+<style>
+  .st-form { display:grid; gap:14px; max-width:720px; font: 15px/1.4 system-ui, -apple-system, sans-serif; }
+  .st-form .st-grid { display:grid; gap:14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .st-form label { display:grid; gap:6px; font-weight:600; font-size:13px; }
+  .st-form input:not([type=checkbox]), .st-form select, .st-form textarea {
+    font: inherit; font-weight:400; padding:10px 12px; border:1px solid #c9d3e3; border-radius:8px; background:#fff; color:#0a0f1c; }
+  .st-form fieldset { border:1px solid #c9d3e3; border-radius:8px; padding:12px 14px; display:grid; gap:8px; }
+  .st-form legend { font-weight:600; font-size:13px; padding:0 6px; }
+  .st-form .st-check { display:flex; gap:8px; align-items:center; font-weight:400; font-size:14px; }
+  .st-form button { justify-self:start; padding:11px 18px; border:0; border-radius:8px; background:#0a0f1c; color:#fff; font-weight:600; cursor:pointer; }
+  .st-form button[disabled] { opacity:.6; cursor:wait; }
+  .st-form .st-msg { margin:0; font-size:14px; }
+</style>
+
+<script>
+(function () {
+  var form = document.getElementById("st-sponsor-form");
+  if (!form) return;
+  var msg = form.querySelector(".st-msg");
+  var btn = form.querySelector("button[type=submit]");
+  form.source_page.value = location.href;
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (!form.reportValidity()) return;
+    var logo = form.logo.files[0];
+    if (logo && logo.size > 5 * 1024 * 1024) { msg.textContent = "Logo must be under 5 MB."; return; }
+    btn.disabled = true; msg.textContent = "Sending…";
+    fetch(form.action, { method: "POST", body: new FormData(form), headers: { Accept: "application/json" } })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        if (!res.ok) throw new Error(res.j.error || "Something went wrong.");
+        form.reset();
+        msg.textContent = "Thanks! We review every sponsor personally and will email you an invite if it's a fit.";
+      })
+      .catch(function (err) { msg.textContent = err.message + " You can also email sponsors@snowthumb.com."; })
+      .finally(function () { btn.disabled = false; });
+  });
+})();
+</script>
