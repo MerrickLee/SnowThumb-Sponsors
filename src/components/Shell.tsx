@@ -21,7 +21,7 @@ export function Shell({
             <span className="eyebrow text-sky">{area}</span>
             <div className="hidden xl:block ml-2 min-w-0"><NavLinks items={nav} /></div>
             <div className="ml-auto flex items-center gap-2 text-sm">
-              {switchTo && <a href={switchTo.href} className="btn btn-sm btn-ghost hidden xl:inline-flex whitespace-nowrap">{switchTo.label}</a>}
+              {switchTo && <span className="hidden xl:inline"><a href={switchTo.href} className="btn btn-sm btn-ghost whitespace-nowrap">{switchTo.label}</a></span>}
               <span className="text-muted hidden 2xl:inline truncate max-w-56" title={email}>{email}</span>
               <form action="/auth/signout" method="post">
                 <button className="btn btn-sm btn-ghost" title={`Signed in as ${email}`}>Sign out</button>
