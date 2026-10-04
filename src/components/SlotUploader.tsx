@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/analytics";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -38,14 +39,15 @@ export function SlotUploader({
 
   async function upload(slot: Slot, file: File) {
     say(slot.id, null);
-    if (!["image/png", "image/jpeg"].includes(file.type)) return say(slot.id, { tone: "bad", text: "Use a PNG or JPEG file." });
+    const fail = (result: string, m: Msg) => { track("art_uploaded", { slot_id: slot.id, slot_kind: slot.kind, result }); return say(slot.id, m); };
+    if (!["image/png", "image/jpeg"].includes(file.type)) return fail("wrong_type", { tone: "bad", text: "Use a PNG or JPEG file." });
     if (file.size > slot.max_bytes) {
-      return say(slot.id, { tone: "bad", text: `This file is ${Math.round(file.size / 1024)} KB. The limit is ${Math.round(slot.max_bytes / 1024)} KB. Try exporting as JPEG or compressing it.` });
+      return fail("too_big", { tone: "bad", text: `This file is ${Math.round(file.size / 1024)} KB. The limit is ${Math.round(slot.max_bytes / 1024)} KB. Try exporting as JPEG or compressing it.` });
     }
     let dims;
     try { dims = await readDims(file); } catch { return say(slot.id, { tone: "bad", text: "We couldn't read that image. Re-export it as PNG or JPEG." }); }
     if (dims.width !== slot.width || dims.height !== slot.height) {
-      return say(slot.id, { tone: "bad", text: `Needs to be exactly ${slot.width}×${slot.height}px. Yours is ${dims.width}×${dims.height}px. Use the template to resize.` });
+      return fail("wrong_size", { tone: "bad", text: `Needs to be exactly ${slot.width}×${slot.height}px. Yours is ${dims.width}×${dims.height}px. Use the template to resize.` });
     }
 
     setBusy(slot.id);
@@ -62,6 +64,7 @@ export function SlotUploader({
     setBusy(null);
     if (dbErr) return say(slot.id, { tone: "bad", text: dbErr.message });
     setLocal((l) => ({ ...l, [slot.id]: URL.createObjectURL(file) }));
+    track("art_uploaded", { slot_id: slot.id, slot_kind: slot.kind, result: "ok" });
     say(slot.id, { tone: "ok", text: "Uploaded. It'll be reviewed when you submit." });
     router.refresh();
   }
@@ -114,7 +117,7 @@ export function SlotUploader({
                 {c && c.status === "pending" && (
                   <button className="btn btn-sm btn-ghost text-bad" disabled={isBusy} onClick={() => remove(slot)}>Remove</button>
                 )}
-                {slot.template_url && <a className="btn btn-sm btn-ghost" href={slot.template_url} download>Template</a>}
+                {slot.template_url && <a className="btn btn-sm btn-ghost" href={slot.template_url} download onClick={() => track("template_downloaded", { slot_id: slot.id, area: "campaign" })}>Template</a>}
                 <span className="text-xs text-muted hidden md:inline">or drop a file here</span>
               </div>
             )}

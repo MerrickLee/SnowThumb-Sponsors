@@ -1,3 +1,4 @@
+import { TrackOnMount } from "@/components/Track";
 import type { Metadata } from "next";
 import { requireSponsor } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -32,6 +33,7 @@ export default async function PortalStats({ searchParams }: PageProps<"/portal/s
 
   return (
     <>
+      <TrackOnMount event="stats_viewed" props={{ from, to, campaign_filter: typeof sp.campaign === "string" ? "one" : "all" }} />
       <PageHeader eyebrow="Performance" title="How players see your brand" sub="An impression counts when your art is on screen for at least one second during a run. Updated hourly." />
       <div className="mb-6"><RangePicker from={from} to={to} campaigns={campaigns ?? []} /></div>
       <StatsPanel rows={(rows ?? []) as DailyStat[]} from={from} to={to} names={names} slotLabels={slotLabels}

@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/analytics";
 import { useRef, useState } from "react";
 
 const ENDPOINT = `${process.env.NEXT_PUBLIC_FUNCTIONS_URL ?? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1`}/sponsor-apply`;
@@ -23,6 +24,7 @@ export function SponsorApplyForm() {
   const [errors, setErrors] = useState<Errors>({});
   const [logoName, setLogoName] = useState("");
   const [sentTo, setSentTo] = useState("");
+  const startedRef = useRef(false);
 
   function validate(form: FormData): Errors {
     const e: Errors = {};
@@ -42,6 +44,7 @@ export function SponsorApplyForm() {
     const v = validate(form);
     setErrors(v);
     if (Object.keys(v).length) {
+      track("apply_failed", { reason: "validation", fields: Object.keys(v) });
       const first = Object.keys(v)[0];
       ref.current?.querySelector<HTMLElement>(`[name="${first}"]`)?.focus();
       return;
@@ -52,10 +55,16 @@ export function SponsorApplyForm() {
       const res = await fetch(ENDPOINT, { method: "POST", body: form, headers: { Accept: "application/json" } });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error ?? "Something went wrong. Please try again.");
+      track("apply_submitted", {
+        interests: form.getAll("interests").map(String),
+        budget_range: String(form.get("budget_range") ?? "") || undefined,
+        has_logo: form.get("logo") instanceof File && (form.get("logo") as File).size > 0,
+      });
       setSentTo(String(form.get("contact_email")));
       setState("done");
     } catch (err) {
       setState("idle");
+      track("apply_failed", { reason: "server" });
       setErrors({ form: `${(err as Error).message} You can also email sponsors@snowthumb.com.` });
     }
   }
@@ -84,7 +93,12 @@ export function SponsorApplyForm() {
   });
 
   return (
-    <form ref={ref} onSubmit={submit} noValidate className="card p-5 md:p-7 grid md:grid-cols-2 gap-5 [&>*]:min-w-0" encType="multipart/form-data">
+    <form ref={ref} onSubmit={submit}
+      onFocus={(e) => {
+        if (startedRef.current) return;
+        startedRef.current = true;
+        track("apply_started", { first_field: (e.target as unknown as HTMLInputElement).name || undefined });
+      }} noValidate className="card p-5 md:p-7 grid md:grid-cols-2 gap-5 [&>*]:min-w-0" encType="multipart/form-data">
       <div>
         <label className="label" htmlFor="company_name">Company<span className="req" aria-hidden>*</span></label>
         <input id="company_name" name="company_name" required autoComplete="organization" className="input" {...field("company_name")} />

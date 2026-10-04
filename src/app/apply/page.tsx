@@ -1,3 +1,4 @@
+import { TrackOnView } from "@/components/Track";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { SponsorApplyForm } from "@/components/SponsorApplyForm";
@@ -90,9 +91,9 @@ export default async function ApplyPage() {
           <p className="eyebrow">Placements</p>
           <h2 className="title text-3xl md:text-4xl mt-2">Where your brand shows up.</h2>
           <p className="text-muted mt-2 max-w-2xl">All art is PNG or JPEG at the exact size listed. The console checks sizes before you upload, and every placement comes with a downloadable template.</p>
-          <div className="grid md:grid-cols-2 gap-4 mt-8">
+          <div className="grid md:grid-cols-2 gap-4 mt-8 [&>*]:min-w-0">
             {groups.map(({ kind, slots }) => (
-              <article key={kind} className="card p-5">
+              <TrackOnView key={kind} event="placement_viewed" props={{ slot_kind: kind }} className="card p-5">
                 <h3 className="font-bold text-lg">{KIND_PITCH[kind]?.title ?? kind}</h3>
                 <p className="text-muted text-sm mt-1">{KIND_PITCH[kind]?.why}</p>
                 <ul className="mt-4 divide-y divide-line text-sm">
@@ -103,7 +104,7 @@ export default async function ApplyPage() {
                     </li>
                   ))}
                 </ul>
-              </article>
+              </TrackOnView>
             ))}
             <article className="card p-5 bg-accent-soft border-accent/20">
               <h3 className="font-bold text-lg">Sponsor challenges</h3>

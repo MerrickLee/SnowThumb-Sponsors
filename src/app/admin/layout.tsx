@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Shell } from "@/components/Shell";
+import { IdentifyUser } from "@/components/IdentifyUser";
 
 export const metadata: Metadata = { title: { default: "Admin", template: "%s · Admin · SnowThumb" } };
 
@@ -20,5 +21,10 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
     { href: "/admin/gear", label: "Gear" },
     { href: "/admin/house", label: "House ads" },
   ];
-  return <Shell area="Admin" nav={nav} email={s.email} switchTo={{ href: "/portal", label: "Sponsor view" }}>{children}</Shell>;
+  return (
+    <Shell area="Admin" nav={nav} email={s.email} switchTo={{ href: "/portal", label: "Sponsor view" }}>
+      <IdentifyUser userId={s.userId} role="admin" sponsorIds={[]} />
+      {children}
+    </Shell>
+  );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/analytics";
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
@@ -40,6 +41,7 @@ function LoginForm() {
     if (error) {
       setState("idle");
       const m = error.message.toLowerCase();
+      track("signin_requested", { result: m.includes("signups not allowed") || m.includes("not found") || error.status === 422 ? "no_access" : m.includes("rate") || error.status === 429 ? "rate_limited" : "email_failed" });
       if (m.includes("signups not allowed") || m.includes("not found") || error.status === 422) {
         setError("That email doesn't have access yet. If you applied to sponsor, we'll send an invite once you're approved.");
       } else if (m.includes("rate") || m.includes("security purposes") || error.status === 429) {
@@ -53,6 +55,7 @@ function LoginForm() {
       }
       return;
     }
+    track("signin_requested", { result: "sent" });
     setState("sent");
     setWait(COOLDOWN);
   }

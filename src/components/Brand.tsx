@@ -21,6 +21,7 @@ export function Footer() {
           <a className="hover:text-text" href="https://snowthumb.com" target="_blank" rel="noreferrer">snowthumb.com</a>
           <a className="hover:text-text" href="mailto:sponsors@snowthumb.com">sponsors@snowthumb.com</a>
           <a className="hover:text-text" href="/apply">Become a sponsor</a>
+          <a className="hover:text-text" href="/privacy">Privacy</a>
         </nav>
       </div>
     </footer>

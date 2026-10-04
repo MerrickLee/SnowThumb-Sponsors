@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { Analytics } from "@/components/Analytics";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://sponsors.snowthumb.com"),
@@ -16,6 +17,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <a href="#main" className="skip-link">Skip to content</a>
         {children}
+        <Analytics />
       </body>
     </html>
   );

@@ -1,3 +1,4 @@
+import { TrackedLink } from "@/components/Track";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/Shell";
@@ -56,7 +57,7 @@ export default async function Guide() {
                 {s.description && <p className="text-sm text-muted">{s.description}</p>}
                 <SlotMockup slot={s} src={s.template_url ?? undefined} />
                 {s.template_url && (
-                  <a className="btn btn-sm self-start" href={s.template_url} download>Download template</a>
+                  <TrackedLink event="template_downloaded" props={{ slot_id: s.id, area: "guide" }} className="btn btn-sm self-start" href={s.template_url} download>Download template</TrackedLink>
                 )}
               </article>
             ))}
