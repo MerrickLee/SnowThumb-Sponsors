@@ -24,6 +24,20 @@ declare global { interface Window { gtag?: Gtag; dataLayer?: unknown[] } }
 
 let started = false;
 
+/** Sets up gtag and Consent Mode defaults before any event, even if gtag.js hasn't loaded yet. */
+export function ensureGtag() {
+  if (typeof window === "undefined" || window.gtag) return;
+  window.dataLayer = window.dataLayer || [];
+  // gtag.js reads the queued `arguments` objects in order once it loads.
+  window.gtag = function gtag() { // eslint-disable-next-line prefer-rest-params
+    window.dataLayer!.push(arguments);
+  };
+  const g = getConsent() === "granted" ? "granted" : "denied";
+  window.gtag("consent", "default", { analytics_storage: g, ad_storage: g, ad_user_data: g, ad_personalization: "denied", wait_for_update: 500 });
+  window.gtag("js", new Date());
+  window.gtag("config", GA_ID, { send_page_view: false });
+}
+
 export type Consent = "granted" | "denied" | null;
 
 export function getConsent(): Consent {
@@ -35,6 +49,7 @@ export function getConsent(): Consent {
 
 export function setConsent(value: "granted" | "denied") {
   try { localStorage.setItem(CONSENT_KEY, value); } catch { /* private mode */ }
+  ensureGtag();
   window.gtag?.("consent", "update", {
     analytics_storage: value,
     ad_storage: value,
@@ -62,6 +77,7 @@ export function track(event: string, props: Props = {}) {
   if (getConsent() !== "granted") return;
   start();
   amplitude.track(event, props);
+  ensureGtag();
   const ga = GA_EVENTS[event];
   if (ga && window.gtag) window.gtag("event", ga, props);
 }

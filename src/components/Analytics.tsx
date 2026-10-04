@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Script from "next/script";
 import { usePathname, useSearchParams } from "next/navigation";
-import { GA_ID, getConsent, setConsent, start, track, type Consent } from "@/lib/analytics";
+import { GA_ID, ensureGtag, getConsent, setConsent, start, track, type Consent } from "@/lib/analytics";
 
 const PRIVATE = /^\/(admin|portal|auth)/;
 
@@ -29,6 +29,7 @@ export function Analytics() {
 
   useEffect(() => {
     const read = () => setLocal(getConsent());
+    ensureGtag(); // Consent Mode v2 defaults (denied until Accept) before gtag.js loads
     read();
     start();
     window.addEventListener("st-consent", read);
@@ -37,17 +38,6 @@ export function Analytics() {
 
   return (
     <>
-      {/* Consent Mode v2: everything denied until the visitor accepts. */}
-      <Script id="ga-consent" strategy="afterInteractive">{`
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        window.gtag = gtag;
-        var c = null; try { c = localStorage.getItem('st_consent'); } catch (e) {}
-        var g = c === 'granted' ? 'granted' : 'denied';
-        gtag('consent', 'default', { analytics_storage: g, ad_storage: g, ad_user_data: g, ad_personalization: 'denied', wait_for_update: 500 });
-        gtag('js', new Date());
-        gtag('config', '${GA_ID}', { send_page_view: false });
-      `}</Script>
       <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
       <Suspense><PageViews /></Suspense>
       {consent === null && <ConsentBanner />}
