@@ -84,6 +84,7 @@ export default async function AdminOverview({ searchParams }: PageProps<"/admin"
       </div>
 
       <h2 className="text-lg font-semibold mb-3">All-sponsor performance</h2>
+      {reach.error && <p className="notice notice-warn mb-4">Runs and players couldn&apos;t load: {reach.error}</p>}
       <div className="mb-6"><RangePicker from={from} to={to} campaigns={campaignsRes.data ?? []} /></div>
       <StatsPanel rows={(statsRes.data ?? []) as DailyStat[]} from={from} to={to} names={names} slotLabels={slotLabels}
         csvName={`snowthumb-all-sponsors-${from}-to-${to}.csv`} reach={reach} />

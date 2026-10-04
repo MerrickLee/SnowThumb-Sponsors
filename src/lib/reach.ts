@@ -9,6 +9,8 @@ export type Reach = {
   players: number;
   runsByDay: Record<string, number>;
   byCampaign: Record<string, { runsShown: number; players: number }>;
+  /** Set when the events query failed, so admins can see why reach is empty. */
+  error?: string;
 };
 
 const empty = (): Reach => ({ runsShown: 0, players: 0, runsByDay: {}, byCampaign: {} });
@@ -36,7 +38,7 @@ export async function getReach(campaignIds: string[], from: string, to: string):
       .gte("occurred_at", easternDayToIso(from, "start"))
       .lte("occurred_at", easternDayToIso(to, "end"))
       .order("id").range(offset, offset + PAGE - 1);
-    if (error) console.error("getReach:", error.message, error.details ?? "");
+    if (error) { console.error("getReach:", error.message, error.details ?? ""); out.error = error.message; }
     if (error || !data) break;
     for (const e of data) {
       const day = new Date(e.occurred_at).toLocaleDateString("en-CA", { timeZone: "America/New_York" });
