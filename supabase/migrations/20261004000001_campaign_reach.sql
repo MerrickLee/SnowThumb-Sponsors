@@ -1,5 +1,3 @@
--- PENDING: not applied yet (the approval was cancelled). Until then the reach edge
--- function computes runs, players and taps live from events.
 -- In-game taps on the sponsor (Today's sponsor card), and reach.
 alter table public.campaign_daily_stats add column if not exists sponsor_taps integer not null default 0;
 
