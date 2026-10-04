@@ -1,3 +1,5 @@
+import { getReach } from "@/lib/reach";
+import { easternDate } from "@/lib/stats";
 import Link from "next/link";
 import { requireSponsor } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -24,6 +26,7 @@ export default async function PortalHome() {
     supabase.from("campaign_stats_totals").select("campaign_id, impressions, clicks, gear_equips"),
   ]);
   const t = Object.fromEntries((totals ?? []).map((r) => [r.campaign_id, r]));
+  const reach = await getReach((campaigns ?? []).map((c) => c.id), "2026-01-01", easternDate(0));
   const sponsorName = Object.fromEntries(s.sponsors.map((x) => [x.id, x.name]));
   const list = (campaigns ?? []) as Campaign[];
   const needsAction = list.filter((c) => c.status === "draft" || c.status === "rejected");
@@ -59,9 +62,9 @@ export default async function PortalHome() {
                 </p>
               </div>
               <dl className="grid grid-cols-3 gap-4 md:gap-8 text-right">
+                <Stat label="Runs shown" value={reach.byCampaign[c.id]?.runsShown} />
                 <Stat label="Impressions" value={t[c.id]?.impressions} />
                 <Stat label="Clicks" value={t[c.id]?.clicks} />
-                <Stat label="Equips" value={t[c.id]?.gear_equips} />
               </dl>
             </Link>
           </li>
@@ -85,7 +88,7 @@ function Welcome({ name }: { name?: string }) {
     { t: "Create a campaign", d: "Name it, add the link players will visit, and set dates." },
     { t: "Upload your art", d: "Pick placements and upload art. We check sizes before you upload." },
     { t: "Submit for review", d: "We approve it, usually quickly, and it goes live on players' next app open." },
-    { t: "Watch it perform", d: "Impressions, time on screen, gear unlocks, equips and clicks, updated hourly." },
+    { t: "Watch it perform", d: "Runs your brand was in, players reached, impressions, gear unlocks and clicks." },
   ];
   return (
     <>

@@ -2,9 +2,10 @@
 
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from "recharts";
 
-type Point = { day: string; impressions: number; clicks: number; engagements: number };
+type Point = { day: string; runs: number; impressions: number; clicks: number; engagements: number };
 
 const SERIES = [
+  { key: "runs", name: "Runs shown in", color: "#082d58" },
   { key: "impressions", name: "Impressions", color: "#0879d9" },
   { key: "engagements", name: "Unlocks + equips + challenges", color: "#0f7a4a" },
   { key: "clicks", name: "Clicks", color: "#c27803" },
@@ -12,7 +13,7 @@ const SERIES = [
 
 export function StatsChart({ data }: { data: Point[] }) {
   return (
-    <div className="h-64 md:h-72 w-full" role="img" aria-label="Daily impressions, engagements and clicks">
+    <div className="h-64 md:h-72 w-full" role="img" aria-label="Daily runs shown in, impressions, engagements and clicks">
       <ResponsiveContainer>
         <LineChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
           <CartesianGrid stroke="#d6e3f1" vertical={false} />

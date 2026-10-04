@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { TrackOnMount } from "@/components/Track";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireSponsor } from "@/lib/auth";
@@ -16,7 +17,9 @@ export const metadata: Metadata = { title: "Campaign" };
 
 export default async function CampaignPage({ params, searchParams }: PageProps<"/portal/campaigns/[id]">) {
   const { id } = await params;
-  const justSubmitted = (await searchParams).submitted === "1";
+  const sp = await searchParams;
+  const justSubmitted = sp.submitted === "1";
+  const justCreated = sp.created === "1";
   const session = await requireSponsor();
   const supabase = await createClient();
   const { data: campaign } = await supabase.from("campaigns").select("*").eq("id", id).maybeSingle<Campaign>();
@@ -44,6 +47,8 @@ export default async function CampaignPage({ params, searchParams }: PageProps<"
 
   return (
     <>
+      {justCreated && <TrackOnMount event="campaign_created" props={{ campaign_id: campaign.id }} />}
+      {justSubmitted && <TrackOnMount event="campaign_submitted" props={{ campaign_id: campaign.id, placement_count: crs.length }} />}
       <nav aria-label="Breadcrumb" className="text-sm mb-4"><Link className="link" href="/portal">Campaigns</Link> <span className="text-muted">/ {campaign.name}</span></nav>
 
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">

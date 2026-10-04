@@ -1,3 +1,4 @@
+import { getReach } from "@/lib/reach";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/Shell";
@@ -39,6 +40,8 @@ export default async function AdminOverview({ searchParams }: PageProps<"/admin"
       fetch(`${env.functionsUrl}/manifest`, { cache: "no-store" }).then((r) => r.json()).catch(() => null),
     ]);
 
+  const allIds = (campaignsRes.data ?? []).map((c) => c.id);
+  const reach = await getReach(campaign ? allIds.filter((id) => id === campaign) : allIds, from, to);
   const names = Object.fromEntries((campaignsRes.data ?? []).map((c) => [c.id, c.name]));
   const slotLabels = Object.fromEntries((slotsRes.data ?? []).map((s) => [s.id, s.label]));
 
@@ -83,7 +86,7 @@ export default async function AdminOverview({ searchParams }: PageProps<"/admin"
       <h2 className="text-lg font-semibold mb-3">All-sponsor performance</h2>
       <div className="mb-6"><RangePicker from={from} to={to} campaigns={campaignsRes.data ?? []} /></div>
       <StatsPanel rows={(statsRes.data ?? []) as DailyStat[]} from={from} to={to} names={names} slotLabels={slotLabels}
-        csvName={`snowthumb-all-sponsors-${from}-to-${to}.csv`} />
+        csvName={`snowthumb-all-sponsors-${from}-to-${to}.csv`} reach={reach} />
     </>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/analytics";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -37,6 +38,7 @@ export function CampaignReview({ campaignId }: { campaignId: string }) {
     setBusy(true); setMsg(null);
     try {
       const r = await callReview({ campaign_id: campaignId, action, notes });
+      track("campaign_reviewed", { campaign_id: campaignId, decision: action === "approve" ? "approved" : "sent_back" });
       setMsg({ tone: "ok", text: action === "approve" ? `Approved. ${r.published ?? 0} file(s) published. Live on next app open.` : "Sent back to the sponsor." });
       router.refresh();
     } catch (e) {

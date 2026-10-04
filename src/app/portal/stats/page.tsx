@@ -1,3 +1,4 @@
+import { getReach } from "@/lib/reach";
 import { TrackOnMount } from "@/components/Track";
 import type { Metadata } from "next";
 import { requireSponsor } from "@/lib/auth";
@@ -28,6 +29,8 @@ export default async function PortalStats({ searchParams }: PageProps<"/portal/s
     supabase.from("slots").select("id, label"),
   ]);
 
+  const visible = (campaigns ?? []).map((c) => c.id);
+  const reach = await getReach(campaign ? visible.filter((id) => id === campaign) : visible, from, to);
   const names = Object.fromEntries((campaigns ?? []).map((c) => [c.id, c.name]));
   const slotLabels = Object.fromEntries((slots ?? []).map((s) => [s.id, s.label]));
 
@@ -37,7 +40,7 @@ export default async function PortalStats({ searchParams }: PageProps<"/portal/s
       <PageHeader eyebrow="Performance" title="How players see your brand" sub="An impression counts when your art is on screen for at least one second during a run. Updated hourly." />
       <div className="mb-6"><RangePicker from={from} to={to} campaigns={campaigns ?? []} /></div>
       <StatsPanel rows={(rows ?? []) as DailyStat[]} from={from} to={to} names={names} slotLabels={slotLabels}
-        csvName={`snowthumb-performance-${from}-to-${to}.csv`} />
+        csvName={`snowthumb-performance-${from}-to-${to}.csv`} reach={reach} />
     </>
   );
 }

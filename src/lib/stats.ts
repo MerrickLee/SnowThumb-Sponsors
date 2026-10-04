@@ -35,14 +35,14 @@ export function totals(rows: DailyStat[]) {
 }
 
 /** One point per day across the full range (zero-filled), for the chart. */
-export function byDay(rows: DailyStat[], from: string, to: string) {
+export function byDay(rows: DailyStat[], from: string, to: string, runsByDay: Record<string, number> = {}) {
   const map = new Map<string, Totals>();
   for (const r of rows) map.set(r.day, addRow(map.get(r.day) ?? emptyTotals(), r));
-  const out: { day: string; impressions: number; clicks: number; engagements: number }[] = [];
+  const out: { day: string; runs: number; impressions: number; clicks: number; engagements: number }[] = [];
   for (let d = new Date(from + "T00:00:00Z"); d <= new Date(to + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + 1)) {
     const key = d.toISOString().slice(0, 10);
     const t = map.get(key) ?? emptyTotals();
-    out.push({ day: key, impressions: t.impressions, clicks: t.clicks, engagements: t.gearUnlocks + t.gearEquips + t.challengeCompletes });
+    out.push({ day: key, runs: runsByDay[key] ?? 0, impressions: t.impressions, clicks: t.clicks, engagements: t.gearUnlocks + t.gearEquips + t.challengeCompletes });
   }
   return out;
 }

@@ -119,7 +119,7 @@ export async function createHouseCampaign(_: AdminState, form: FormData): Promis
     link_url: link ? (link.startsWith("https://") ? link : `https://${link.replace(/^https?:\/\//, "")}`) : null,
   }).select("id").single();
   if (error) return { error: error.message };
-  redirect(`/portal/campaigns/${data.id}`);
+  redirect(`/portal/campaigns/${data.id}?created=1`);
 }
 
 /* ---------------- Gear & challenges ---------------- */

@@ -1,12 +1,17 @@
 import type { DailyStat } from "@/lib/types";
+import type { Reach } from "@/lib/reach";
 import { avgSeconds, breakdown, byDay, ctr, fmt, totals } from "@/lib/stats";
 import { StatsChart } from "@/components/StatsChart";
 import { CsvButton } from "@/components/CsvButton";
 
-export function Kpis({ rows }: { rows: DailyStat[] }) {
+export function Kpis({ rows, reach }: { rows: DailyStat[]; reach?: Reach }) {
   const t = totals(rows);
   const tiles = [
-    { label: "Impressions", value: fmt(t.impressions) },
+    ...(reach ? [
+      { label: "Runs your brand was in", value: fmt(reach.runsShown), hint: "Each run counts once, however many placements showed you" },
+      { label: "Players reached", value: fmt(reach.players), hint: "Different players who saw your art" },
+    ] : []),
+    { label: "Impressions", value: fmt(t.impressions), hint: "1+ second on screen, per placement, per run" },
     { label: "Avg seconds on screen", value: avgSeconds(t).toFixed(1) },
     { label: "Clicks", value: fmt(t.clicks) },
     { label: "CTR", value: `${ctr(t).toFixed(2)}%` },
@@ -18,9 +23,10 @@ export function Kpis({ rows }: { rows: DailyStat[] }) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {tiles.map((k) => (
-        <div key={k.label} className="card p-4">
+        <div key={k.label} className="card p-4" title={"hint" in k ? k.hint : undefined}>
           <p className="text-xs font-bold text-muted">{k.label}</p>
           <p className="text-2xl md:text-3xl font-black mt-1 num">{k.value}</p>
+          {"hint" in k && k.hint && <p className="text-[11px] text-muted mt-1 leading-snug hidden sm:block">{k.hint}</p>}
         </div>
       ))}
     </div>
@@ -28,10 +34,10 @@ export function Kpis({ rows }: { rows: DailyStat[] }) {
 }
 
 export function StatsPanel({
-  rows, from, to, names, slotLabels, csvName,
+  rows, from, to, names, slotLabels, csvName, reach,
 }: {
   rows: DailyStat[]; from: string; to: string;
-  names: Record<string, string>; slotLabels: Record<string, string>; csvName: string;
+  names: Record<string, string>; slotLabels: Record<string, string>; csvName: string; reach?: Reach;
 }) {
   const slots = breakdown(rows, "slot_id");
   const gear = breakdown(rows, "gear_item_id");
@@ -45,13 +51,13 @@ export function StatsPanel({
   }
   return (
     <div className="space-y-6">
-      <Kpis rows={rows} />
+      <Kpis rows={rows} reach={reach} />
       <div className="card p-4">
         <div className="flex items-center justify-between mb-2">
           <h2 className="font-bold">Daily performance</h2>
           <CsvButton rows={rows} names={names} filename={csvName} />
         </div>
-        <StatsChart data={byDay(rows, from, to)} />
+        <StatsChart data={byDay(rows, from, to, reach?.runsByDay)} />
         <p className="text-xs text-muted mt-2">Updated hourly. Days are Eastern time.</p>
       </div>
       <div className="grid md:grid-cols-2 gap-6">

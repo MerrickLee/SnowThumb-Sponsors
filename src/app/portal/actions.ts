@@ -30,7 +30,7 @@ export async function createCampaign(_: ActionState, form: FormData): Promise<Ac
   if (f.starts_at && f.ends_at && f.ends_at <= f.starts_at) return { error: "The end date needs to be after the start date." };
   const { data, error } = await supabase.from("campaigns").insert({ sponsor_id, ...f }).select("id").single();
   if (error) return { error: friendly(error.message) };
-  redirect(`/portal/campaigns/${data.id}`);
+  redirect(`/portal/campaigns/${data.id}?created=1`);
 }
 
 export async function updateCampaign(_: ActionState, form: FormData): Promise<ActionState> {
