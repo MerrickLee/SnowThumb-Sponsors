@@ -14,9 +14,10 @@ import type { Campaign, Creative, Slot } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Campaign" };
 
-export default async function CampaignPage({ params }: PageProps<"/portal/campaigns/[id]">) {
+export default async function CampaignPage({ params, searchParams }: PageProps<"/portal/campaigns/[id]">) {
   const { id } = await params;
-  await requireSponsor();
+  const justSubmitted = (await searchParams).submitted === "1";
+  const session = await requireSponsor();
   const supabase = await createClient();
   const { data: campaign } = await supabase.from("campaigns").select("*").eq("id", id).maybeSingle<Campaign>();
   if (!campaign) notFound();
@@ -31,6 +32,9 @@ export default async function CampaignPage({ params }: PageProps<"/portal/campai
   const hasLink = !!campaign.link_url;
   const hasArt = crs.length > 0;
   const ready = hasLink && hasArt;
+  // Once locked, only show the placements that have art; empty upload boxes are just noise.
+  const allSlots = (slots ?? []) as Slot[];
+  const shownSlots = editable ? allSlots : allSlots.filter((sl) => crs.some((c) => c.slot_id === sl.id));
 
   const steps = [
     { t: "Details", done: hasLink, hint: hasLink ? "Link added" : "Add the link players visit" },
@@ -69,7 +73,17 @@ export default async function CampaignPage({ params }: PageProps<"/portal/campai
         </div>
       )}
       {campaign.status === "submitted" && (
-        <div className="notice notice-info mb-6">This campaign is in review and locked for editing. Email sponsors@snowthumb.com if you need to change something.</div>
+        justSubmitted ? (
+          <div className="notice notice-ok mb-6" role="status">
+            <p className="font-bold">Submitted for review</p>
+            <p className="mt-1">We check every file before it goes live. This page updates as soon as we approve it or send notes. Need a change in the meantime? Email sponsors@snowthumb.com.</p>
+          </div>
+        ) : (
+          <div className="notice notice-info mb-6">This campaign is in review and locked for editing. Email sponsors@snowthumb.com if you need to change something.</div>
+        )
+      )}
+      {campaign.status === "submitted" && session.isAdmin && (
+        <div className="mb-6"><Link className="btn btn-primary" href="/admin/review">Review it now</Link></div>
       )}
 
       <section className="mb-10" aria-labelledby="details-h">
@@ -80,10 +94,12 @@ export default async function CampaignPage({ params }: PageProps<"/portal/campai
       <section className="mb-10" aria-labelledby="art-h">
         <h2 id="art-h" className="title text-xl">2. Art</h2>
         <p className="text-muted mt-1 mb-4">
-          Upload art only for the placements you&apos;re buying. Each file is checked for exact size before upload.{" "}
-          <Link className="link" href="/portal/guide">Art guide and templates</Link>
+          {editable ? (
+            <>Upload art only for the placements you&apos;re buying. Each file is checked for exact size before upload.{" "}
+              <Link className="link" href="/portal/guide">Art guide and templates</Link></>
+          ) : `${crs.length} placement${crs.length === 1 ? "" : "s"} in this campaign.`}
         </p>
-        <SlotUploader sponsorId={campaign.sponsor_id} campaignId={campaign.id} slots={(slots ?? []) as Slot[]}
+        <SlotUploader sponsorId={campaign.sponsor_id} campaignId={campaign.id} slots={shownSlots}
           creatives={crs} previews={previews} editable={editable} />
       </section>
 

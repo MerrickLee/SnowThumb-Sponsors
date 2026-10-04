@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Empty, PageHeader } from "@/components/Shell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ActionForm } from "@/components/ActionForm";
+import { ConfirmAction } from "@/components/ConfirmAction";
 import { setCampaignStatus, updateCampaignAdmin } from "@/app/admin/actions";
 import type { Campaign } from "@/lib/types";
 
@@ -58,7 +59,10 @@ export default async function AdminCampaigns({ searchParams }: PageProps<"/admin
               <div className="flex lg:flex-col gap-2">
                 {c.status === "approved" && <StatusButton id={c.id} status="paused" label="Pause" />}
                 {c.status === "paused" && c.approved_at && <StatusButton id={c.id} status="approved" label="Resume" />}
-                {c.status !== "archived" && <StatusButton id={c.id} status="archived" label="Archive" danger />}
+                {c.status !== "archived" && (
+                  <ConfirmAction action={setCampaignStatus} fields={{ id: c.id, status: "archived" }} label="Archive"
+                    question="Archive for good? It stops showing and can't be resumed." confirm="Archive" className="btn btn-sm btn-danger w-full" />
+                )}
               </div>
             </div>
           ))}
@@ -68,11 +72,11 @@ export default async function AdminCampaigns({ searchParams }: PageProps<"/admin
   );
 }
 
-function StatusButton({ id, status, label, danger }: { id: string; status: string; label: string; danger?: boolean }) {
+function StatusButton({ id, status, label }: { id: string; status: string; label: string }) {
   return (
     <form action={setCampaignStatus}>
       <input type="hidden" name="id" value={id} /><input type="hidden" name="status" value={status} />
-      <button className={`btn btn-sm w-full ${danger ? "btn-danger" : ""}`}>{label}</button>
+      <button className="btn btn-sm w-full">{label}</button>
     </form>
   );
 }

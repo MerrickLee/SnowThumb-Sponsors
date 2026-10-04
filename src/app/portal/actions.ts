@@ -56,7 +56,8 @@ export async function submitCampaign(_: ActionState, form: FormData): Promise<Ac
   if (error) return { error: friendly(error.message) };
   revalidatePath(`/portal/campaigns/${id}`);
   revalidatePath("/portal");
-  return { ok: "Submitted for review. The status here changes as soon as we approve it or send notes." };
+  // Redirect (rather than an inline message) so the sponsor lands at the top and sees the confirmation.
+  redirect(`/portal/campaigns/${id}?submitted=1`);
 }
 
 export async function deleteDraft(form: FormData) {
