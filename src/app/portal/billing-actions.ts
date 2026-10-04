@@ -72,6 +72,9 @@ export async function startCheckout(_: ActionState, form: FormData): Promise<Act
   try {
     const checkout = await stripe.checkout.sessions.create({
       mode: "payment",
+      // Sponsorships are advertising (a service), which Stripe's Managed Payments
+      // (merchant of record) doesn't cover. Stripe defaults new accounts to it, so opt out.
+      managed_payments: { enabled: false },
       client_reference_id: order.id,
       metadata: { order_id: order.id, campaign_id: c.id, sponsor_id: c.sponsor_id, product, term, days: String(days), start_on: startOn },
       payment_intent_data: { metadata: { order_id: order.id, campaign_id: c.id, sponsor_id: c.sponsor_id } },
