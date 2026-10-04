@@ -49,8 +49,14 @@ export function getConsent(): Consent {
   } catch { return null; }
 }
 
+/** Mirrors the choice into a cookie so the server knows whether it may send payment events. */
+function consentCookie(value: "granted" | "denied") {
+  try { document.cookie = `${CONSENT_KEY}=${value}; Path=/; Max-Age=31536000; SameSite=Lax; Secure`; } catch { /* ignore */ }
+}
+
 export function setConsent(value: "granted" | "denied") {
   try { localStorage.setItem(CONSENT_KEY, value); } catch { /* private mode */ }
+  consentCookie(value);
   ensureGtag();
   window.gtag?.("consent", "update", {
     analytics_storage: value,
@@ -67,6 +73,7 @@ export function setConsent(value: "granted" | "denied") {
 export function start() {
   if (started || typeof window === "undefined" || getConsent() !== "granted") return;
   started = true;
+  consentCookie("granted"); // people who said yes before the cookie existed
   amplitude.init(AMP_KEY, {
     serverZone: "US",
     defaultTracking: false, // page views are sent by hand on route changes

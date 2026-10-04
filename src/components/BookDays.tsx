@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import type { ActionState } from "@/app/portal/actions";
 import { DAY_PRESETS, DAY_RATE_CENTS, MAX_DAYS, MAX_START_AHEAD_DAYS, MIN_DAYS, easternToday, totalCents, usd } from "@/lib/pricing";
-import { track } from "@/lib/analytics";
+import { deviceId, track } from "@/lib/analytics";
 
 const pretty = (day: string) =>
   new Date(`${day}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -28,6 +28,9 @@ export function BookDays({
 }) {
   const today = easternToday();
   const [state, formAction, pending] = useActionState(action, {});
+  const device = useRef<HTMLInputElement>(null);
+  // The server already logs the failure; this one shows what the sponsor saw on the page.
+  useEffect(() => { if (state.error) track("checkout_error_shown", { campaign_id: campaignId, product: "placements", code: state.code ?? "unknown" }); }, [state, campaignId]);
   const [days, setDays] = useState(7);
   const [start, setStart] = useState(today);
   const valid = Number.isInteger(days) && days >= MIN_DAYS && days <= MAX_DAYS;
@@ -35,9 +38,10 @@ export function BookDays({
   const last = addDays(first, Math.max(days, 1) - 1);
 
   return (
-    <form action={formAction} onSubmit={() => track("checkout_started", { campaign_id: campaignId, product: "placements", days, currency: "USD", value: totalCents(days) / 100, extend: !!extendFrom })}
+    <form action={formAction} onSubmitCapture={() => { if (device.current) device.current.value = deviceId() ?? ""; track("checkout_started", { campaign_id: campaignId, product: "placements", days, currency: "USD", value: totalCents(days) / 100, extend: !!extendFrom }); }}
       className="card p-5 md:p-6 grid gap-5">
       <input type="hidden" name="id" value={campaignId} />
+      <input ref={device} type="hidden" name="amp_device_id" defaultValue="" />
       <input type="hidden" name="product" value="placements" />
       <input type="hidden" name="start_on" value={extendFrom ? today : start} />
 
@@ -50,7 +54,7 @@ export function BookDays({
           ))}
           <label className="sr-only" htmlFor="days">Custom number of days</label>
           <input id="days" name="days" type="number" inputMode="numeric" min={MIN_DAYS} max={MAX_DAYS} step={1}
-            className="input w-24" value={Number.isNaN(days) ? "" : days} onChange={(e) => setDays(e.target.valueAsNumber)} />
+            className="input" style={{ width: 96 }} value={Number.isNaN(days) ? "" : days} onChange={(e) => setDays(e.target.valueAsNumber)} />
           <span className="text-sm text-muted">days</span>
         </div>
         <p className="hint">{usd(DAY_RATE_CENTS)} a day, {MIN_DAYS} to {MAX_DAYS} days per booking. You can add more days any time.</p>

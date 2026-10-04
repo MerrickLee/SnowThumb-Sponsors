@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import type { ActionState } from "@/app/portal/actions";
 import { GEAR_TERMS, MAX_START_AHEAD_DAYS, easternToday, usd, type GearTerm } from "@/lib/pricing";
-import { track } from "@/lib/analytics";
+import { deviceId, track } from "@/lib/analytics";
 
 const pretty = (day: string) =>
   new Date(`${day}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -24,6 +24,9 @@ export function BookGear({
 }) {
   const today = easternToday();
   const [state, formAction, pending] = useActionState(action, {});
+  const device = useRef<HTMLInputElement>(null);
+  // The server already logs the failure; this one shows what the sponsor saw on the page.
+  useEffect(() => { if (state.error) track("checkout_error_shown", { campaign_id: campaignId, product: "gear", code: state.code ?? "unknown" }); }, [state, campaignId]);
   const [term, setTerm] = useState<GearTerm>("month");
   const [start, setStart] = useState(today);
   const t = GEAR_TERMS[term];
@@ -31,9 +34,10 @@ export function BookGear({
   const last = addDays(first, t.days - 1);
 
   return (
-    <form action={formAction} onSubmit={() => track("checkout_started", { campaign_id: campaignId, product: "gear", term, currency: "USD", value: t.cents / 100, extend: !!extendFrom })}
+    <form action={formAction} onSubmitCapture={() => { if (device.current) device.current.value = deviceId() ?? ""; track("checkout_started", { campaign_id: campaignId, product: "gear", term, currency: "USD", value: t.cents / 100, extend: !!extendFrom }); }}
       className="card p-5 md:p-6 grid gap-5">
       <input type="hidden" name="id" value={campaignId} />
+      <input ref={device} type="hidden" name="amp_device_id" defaultValue="" />
       <input type="hidden" name="product" value="gear" />
       <input type="hidden" name="term" value={term} />
       <input type="hidden" name="start_on" value={extendFrom ? today : start} />

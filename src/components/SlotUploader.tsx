@@ -8,6 +8,8 @@ import type { Creative, Slot } from "@/lib/types";
 import { SLOT_KIND_LABEL } from "@/lib/types";
 import { StatusBadge } from "@/components/StatusBadge";
 import { SlotMockup } from "@/components/SlotMockup";
+import { PreviewInGame, previewFor } from "@/components/PreviewInGame";
+import type { PreviewArt } from "@/components/GamePreview";
 
 async function readDims(file: File) {
   const bmp = await createImageBitmap(file);
@@ -99,6 +101,15 @@ export function SlotUploader({
     router.refresh();
   }
 
+  // Everything this campaign has art for, so each preview shows the whole package together.
+  const allArt: PreviewArt = {};
+  for (const sl of units) {
+    const c = creativeFor(sl);
+    const src = local[sl.id] ?? (c ? previews[c.id] : undefined);
+    const p = previewFor(sl.id, sl.kind);
+    if (p && src) allArt[p.key] = src;
+  }
+
   return (
     <div className="grid lg:grid-cols-2 gap-4">
       {units.map((slot) => {
@@ -124,6 +135,16 @@ export function SlotUploader({
             </div>
 
             <SlotMockup slot={slot} src={src} />
+            {(() => {
+              const p = previewFor(slot.id, slot.kind);
+              return p && (
+                <div className="flex flex-wrap items-center gap-2 -mt-1">
+                  <PreviewInGame art={allArt} views={p.views} slotKey={p.key} size={{ width: slot.width, height: slot.height }}
+                    label={src ? "Preview in game" : "Preview with the template"} className="btn btn-sm" />
+                  <span className="text-xs text-muted">See it in the park{editable ? ", or try another file first" : ""}.</span>
+                </div>
+              );
+            })()}
 
             {c?.review_notes && c.status === "rejected" && <p className="notice notice-warn">Reviewer: {c.review_notes}</p>}
 

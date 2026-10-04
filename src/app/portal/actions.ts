@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { easternDayToIso } from "@/lib/format";
 import { friendly } from "@/lib/errors";
 
-export type ActionState = { error?: string; ok?: string };
+export type ActionState = { error?: string; ok?: string; code?: string };
 
 function fields(form: FormData) {
   const s = (k: string) => String(form.get(k) ?? "").trim();

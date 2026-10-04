@@ -34,7 +34,7 @@ export default async function CampaignPage({ params, searchParams }: PageProps<"
   if (justPaid && typeof sp.session_id === "string" && sp.session_id.startsWith("cs_")) {
     try {
       const cs = await getStripe().checkout.sessions.retrieve(sp.session_id);
-      if (cs.metadata?.campaign_id === id) await applyPaidSession(cs);
+      if (cs.metadata?.campaign_id === id) await applyPaidSession(cs, "return_page");
     } catch (e) { console.error("checkout sync", (e as Error).message); }
   }
 
@@ -112,7 +112,7 @@ export default async function CampaignPage({ params, searchParams }: PageProps<"
           <p className="mt-1">Stripe emails your receipt. Players see your brand on their next app open once your dates start.</p>
         </div>
       )}
-      {canceledCheckout && <div className="notice notice-info mb-6">Checkout canceled. Nothing was charged.</div>}
+      {canceledCheckout && <div className="notice notice-info mb-6"><TrackOnMount event="checkout_canceled" props={{ campaign_id: campaign.id }} />Checkout canceled. Nothing was charged.</div>}
       {campaign.status === "rejected" && campaign.review_notes && (
         <div className="notice notice-warn mb-6" role="status">
           <p className="font-bold">Changes requested</p>
