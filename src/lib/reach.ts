@@ -36,6 +36,7 @@ export async function getReach(campaignIds: string[], from: string, to: string):
       .gte("occurred_at", easternDayToIso(from, "start"))
       .lte("occurred_at", easternDayToIso(to, "end"))
       .order("id").range(offset, offset + PAGE - 1);
+    if (error) console.error("getReach:", error.message, error.details ?? "");
     if (error || !data) break;
     for (const e of data) {
       const day = new Date(e.occurred_at).toLocaleDateString("en-CA", { timeZone: "America/New_York" });
