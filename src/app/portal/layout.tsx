@@ -12,5 +12,5 @@ export default async function PortalLayout({ children }: LayoutProps<"/portal">)
     { href: "/portal/stats", label: "Performance" },
     { href: "/portal/guide", label: "Art guide" },
   ];
-  return <Shell area="Sponsor" nav={nav} email={s.email} switchTo={s.isAdmin ? { href: "/admin", label: "Admin →" } : undefined}>{children}</Shell>;
+  return <Shell area="Sponsor" nav={nav} email={s.email} switchTo={s.isAdmin ? { href: "/admin", label: "Admin" } : undefined}>{children}</Shell>;
 }

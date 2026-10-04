@@ -20,7 +20,7 @@ export function NavLinks({ items, scroller }: { items: NavItem[]; scroller?: boo
 
   return (
     <nav ref={ref} aria-label="Main"
-      className={`flex gap-1 ${scroller ? "overflow-x-auto -mx-4 px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [mask-image:linear-gradient(to_right,transparent,#000_16px,#000_calc(100%-24px),transparent)]" : "flex-wrap"}`}>
+      className={`flex gap-1 ${scroller ? "overflow-x-auto -mx-4 px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [mask-image:linear-gradient(to_right,transparent,#000_16px,#000_calc(100%-24px),transparent)]" : "flex-nowrap"}`}>
       {items.map((n) => {
         const active = n.exact ? path === n.href : path === n.href || path.startsWith(n.href + "/");
         return (
