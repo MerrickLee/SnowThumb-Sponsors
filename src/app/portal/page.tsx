@@ -64,7 +64,7 @@ export default async function PortalHome() {
               <dl className="grid grid-cols-3 gap-4 md:gap-8 text-right">
                 <Stat label="Runs shown" value={reach.byCampaign[c.id]?.runsShown} />
                 <Stat label="Impressions" value={t[c.id]?.impressions} />
-                <Stat label="Clicks" value={t[c.id]?.clicks} />
+                <Stat label="Site visits" value={t[c.id]?.clicks} />
               </dl>
             </Link>
           </li>

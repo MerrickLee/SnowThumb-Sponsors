@@ -1,7 +1,8 @@
-// Reach for the sponsor console: how many runs a campaign's art was seen in, and by
-// how many players. Counted once per run / once per player, however many placements
-// showed it. The caller's own JWT decides which campaigns they may see (RLS), then the
-// service role reads the raw impression events for just those campaigns.
+// Reach for the sponsor console: how many runs a campaign's art was seen in, by how
+// many players, and how often players tapped the sponsor in the game. Counted once per
+// run / once per player, however many placements showed it. The caller's own JWT
+// decides which campaigns they may see (RLS), then the service role reads the raw
+// events for just those campaigns.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const url = Deno.env.get("SUPABASE_URL")!;
@@ -37,25 +38,27 @@ Deno.serve(async (req) => {
   let ids = (visible ?? []).map((c) => c.id as string);
   if (Array.isArray(body.campaign_ids)) ids = ids.filter((id) => body.campaign_ids.includes(id));
 
-  const out = { runsShown: 0, players: 0, runsByDay: {} as Record<string, number>, byCampaign: {} as Record<string, { runsShown: number; players: number }> };
+  const out = { runsShown: 0, players: 0, taps: 0, runsByDay: {} as Record<string, number>, byCampaign: {} as Record<string, { runsShown: number; players: number; taps: number }> };
   if (ids.length === 0) return json(out);
 
   const admin = createClient(url, service, { auth: { persistSession: false } });
   const runs = new Set<string>(), players = new Set<string>();
   const dayRuns = new Map<string, Set<string>>();
-  const camp = new Map<string, { runs: Set<string>; players: Set<string> }>();
+  const camp = new Map<string, { runs: Set<string>; players: Set<string>; taps: number }>();
   const fmt = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" });
 
   for (let offset = 0; offset < 200_000; offset += 1000) {
     const { data, error } = await admin.from("events")
-      .select("run_id, install_id, campaign_id, occurred_at")
-      .eq("type", "impression").neq("platform", "editor").in("campaign_id", ids)
+      .select("type, run_id, install_id, campaign_id, occurred_at")
+      .in("type", ["impression", "sponsor_tap"]).neq("platform", "editor").in("campaign_id", ids)
       .gte("occurred_at", easternEdge(from, false)).lte("occurred_at", easternEdge(to, true))
       .order("id").range(offset, offset + 999);
     if (error) return json({ ...out, error: error.message }, 500);
     for (const e of data ?? []) {
-      const c = camp.get(e.campaign_id) ?? { runs: new Set<string>(), players: new Set<string>() };
+      const c = camp.get(e.campaign_id) ?? { runs: new Set<string>(), players: new Set<string>(), taps: 0 };
       camp.set(e.campaign_id, c);
+      // In-game taps on the sponsor ("Today's sponsor" card); not part of reach.
+      if (e.type === "sponsor_tap") { c.taps++; out.taps++; continue; }
       if (e.install_id) { players.add(e.install_id); c.players.add(e.install_id); }
       if (e.run_id) {
         runs.add(e.run_id); c.runs.add(e.run_id);
@@ -69,6 +72,6 @@ Deno.serve(async (req) => {
   out.runsShown = runs.size;
   out.players = players.size;
   for (const [d, s] of dayRuns) out.runsByDay[d] = s.size;
-  for (const [id, c] of camp) out.byCampaign[id] = { runsShown: c.runs.size, players: c.players.size };
+  for (const [id, c] of camp) out.byCampaign[id] = { runsShown: c.runs.size, players: c.players.size, taps: c.taps };
   return json(out);
 });

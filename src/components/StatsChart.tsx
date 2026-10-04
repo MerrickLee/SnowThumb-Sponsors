@@ -8,7 +8,7 @@ const SERIES = [
   { key: "runs", name: "Runs shown in", color: "#082d58" },
   { key: "impressions", name: "Impressions", color: "#0879d9" },
   { key: "engagements", name: "Unlocks + equips + challenges", color: "#0f7a4a" },
-  { key: "clicks", name: "Clicks", color: "#c27803" },
+  { key: "clicks", name: "Site visits", color: "#c27803" },
 ] as const;
 
 export function StatsChart({ data }: { data: Point[] }) {

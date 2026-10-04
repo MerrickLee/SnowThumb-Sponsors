@@ -13,8 +13,9 @@ export function Kpis({ rows, reach }: { rows: DailyStat[]; reach?: Reach }) {
     ] : []),
     { label: "Impressions", value: fmt(t.impressions), hint: "1+ second on screen, per placement, per run" },
     { label: "Avg seconds on screen", value: avgSeconds(t).toFixed(1) },
-    { label: "Clicks", value: fmt(t.clicks) },
-    { label: "CTR", value: `${ctr(t).toFixed(2)}%` },
+    ...(reach ? [{ label: "Taps on your brand", value: fmt(reach.taps), hint: "Players who opened your sponsor card in the game" }] : []),
+    { label: "Visits to your site", value: fmt(t.clicks), hint: "Taps on Visit that opened your link in the browser" },
+    { label: "Visit rate", value: `${ctr(t).toFixed(2)}%`, hint: "Site visits per impression" },
     { label: "Gear unlocks", value: fmt(t.gearUnlocks) },
     { label: "Gear equips", value: fmt(t.gearEquips) },
     { label: "Runs on your gear", value: fmt(t.runsWithGear) },
@@ -82,7 +83,7 @@ function Breakdown({
         <table className="table mt-2">
           <thead>
             {mode === "slot" ? (
-              <tr><th>Placement</th><th className="text-right">Impr.</th><th className="text-right">Clicks</th><th className="text-right">CTR</th></tr>
+              <tr><th>Placement</th><th className="text-right">Impr.</th><th className="text-right">Site visits</th><th className="text-right">Visit rate</th></tr>
             ) : (
               <tr><th>Gear</th><th className="text-right">Views</th><th className="text-right">Unlocks</th><th className="text-right">Equips</th><th className="text-right">Runs</th></tr>
             )}

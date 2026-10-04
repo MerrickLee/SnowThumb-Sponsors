@@ -7,8 +7,10 @@ export type Reach = {
   runsShown: number;
   /** Distinct players (app installs) who saw it. */
   players: number;
+  /** In-game taps on the sponsor (opening the Today's sponsor card). */
+  taps: number;
   runsByDay: Record<string, number>;
-  byCampaign: Record<string, { runsShown: number; players: number }>;
+  byCampaign: Record<string, { runsShown: number; players: number; taps: number }>;
   /** Set when the reach service failed, so admins can see why it's empty. */
   error?: string;
 };
@@ -19,7 +21,7 @@ export type Reach = {
  * caller's own session, so sponsors only ever get numbers for their own campaigns.
  */
 export async function getReach(campaignIds: string[] | null, from: string, to: string): Promise<Reach> {
-  const empty: Reach = { runsShown: 0, players: 0, runsByDay: {}, byCampaign: {} };
+  const empty: Reach = { runsShown: 0, players: 0, taps: 0, runsByDay: {}, byCampaign: {} };
   if (campaignIds && campaignIds.length === 0) return empty;
   const supabase = await createClient();
   const { data } = await supabase.auth.getSession();

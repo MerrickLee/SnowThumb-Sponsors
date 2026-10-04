@@ -1,5 +1,8 @@
--- PENDING: not applied yet (approval was cancelled). Apply when ready; the console
--- computes the same numbers live from events until then (src/lib/reach.ts).
+-- PENDING: not applied yet (the approval was cancelled). Until then the reach edge
+-- function computes runs, players and taps live from events.
+-- In-game taps on the sponsor (Today's sponsor card), and reach.
+alter table public.campaign_daily_stats add column if not exists sponsor_taps integer not null default 0;
+
 -- Reach: how many runs a campaign's art was seen in, and by how many players.
 -- Counted once per run / once per player, however many placements showed it.
 
@@ -28,7 +31,7 @@ create or replace function public.campaign_reach(p_from date, p_to date, p_campa
 returns table (campaign_id uuid, runs_shown bigint, players bigint)
 language sql stable security definer set search_path = '' as $$
   select e.campaign_id,
-         count(distinct e.run_id) filter (where e.run_id is not null and e.run_id <> ''),
+         count(distinct e.run_id) filter (where e.run_id is not null),
          count(distinct e.install_id)
   from public.events e
   where e.type = 'impression'
@@ -54,7 +57,7 @@ begin
   insert into public.campaign_daily_stats (
     day, sponsor_id, campaign_id, creative_id, slot_id, gear_item_id,
     impressions, view_ms, unique_installs, gear_views, gear_unlocks, gear_equips,
-    runs_with_gear, challenge_starts, challenge_completes, clicks, refreshed_at)
+    runs_with_gear, challenge_starts, challenge_completes, clicks, sponsor_taps, refreshed_at)
   select
     (e.occurred_at at time zone 'America/New_York')::date,
     e.sponsor_id, e.campaign_id, e.creative_id, e.slot_id, e.gear_item_id,
@@ -68,6 +71,7 @@ begin
     count(*) filter (where e.type = 'challenge_start'),
     count(*) filter (where e.type = 'challenge_complete'),
     count(*) filter (where e.type = 'click'),
+    count(*) filter (where e.type = 'sponsor_tap'),
     now()
   from public.events e
   where e.sponsor_id is not null
@@ -82,7 +86,7 @@ begin
   select
     (e.occurred_at at time zone 'America/New_York')::date,
     e.sponsor_id, e.campaign_id,
-    count(distinct e.run_id) filter (where e.run_id is not null and e.run_id <> ''),
+    count(distinct e.run_id) filter (where e.run_id is not null),
     count(distinct e.install_id),
     now()
   from public.events e
@@ -93,3 +97,17 @@ begin
     and e.occurred_at <  ((p_to + 1)::timestamp at time zone 'America/New_York')
   group by 1, 2, 3;
 end $function$;
+
+-- Totals view gains in-game sponsor taps (appended column keeps the view replaceable).
+create or replace view public.campaign_stats_totals with (security_invoker = true) as
+  select sponsor_id, campaign_id,
+    min(day) as first_day, max(day) as last_day,
+    sum(impressions) as impressions, sum(view_ms) as view_ms,
+    sum(gear_views) as gear_views, sum(gear_unlocks) as gear_unlocks, sum(gear_equips) as gear_equips,
+    sum(runs_with_gear) as runs_with_gear,
+    sum(challenge_starts) as challenge_starts, sum(challenge_completes) as challenge_completes,
+    sum(clicks) as clicks,
+    case when sum(impressions) > 0 then round(sum(clicks)::numeric / sum(impressions)::numeric * 100, 2) end as ctr_pct,
+    sum(sponsor_taps) as sponsor_taps
+  from public.campaign_daily_stats s
+  group by sponsor_id, campaign_id;
