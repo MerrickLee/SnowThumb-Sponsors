@@ -16,8 +16,11 @@ function fields(form: FormData) {
   return {
     name: s("name"),
     link_url: link ? (/^https?:\/\//i.test(link) ? link.replace(/^http:/i, "https:") : `https://${link}`) : null,
-    starts_at: starts ? easternDayToIso(starts, "start") : null,
-    ends_at: ends ? easternDayToIso(ends, "end") : null,
+    // Paid campaigns get their dates from checkout, so the form only sends dates when it shows them.
+    ...(form.has("starts_at") ? {
+      starts_at: starts ? easternDayToIso(starts, "start") : null,
+      ends_at: ends ? easternDayToIso(ends, "end") : null,
+    } : {}),
     notes: s("notes") || null,
   };
 }

@@ -29,7 +29,10 @@ export default async function PortalHome() {
   const reach = await getReach((campaigns ?? []).map((c) => c.id), "2026-01-01", easternDate(0));
   const sponsorName = Object.fromEntries(s.sponsors.map((x) => [x.id, x.name]));
   const list = (campaigns ?? []) as Campaign[];
-  const needsAction = list.filter((c) => c.status === "draft" || c.status === "rejected");
+  const houseIds = new Set(s.sponsors.filter((x) => x.is_house).map((x) => x.id));
+  const awaitingPayment = (c: Campaign) =>
+    c.status === "approved" && c.requires_payment && !houseIds.has(c.sponsor_id) && !c.paid_at && !c.gear_ends_at;
+  const needsAction = list.filter((c) => c.status === "draft" || c.status === "rejected" || awaitingPayment(c));
   const name = s.sponsors.length === 1 ? s.sponsors[0].name : "Your campaigns";
 
   if (list.length === 0) return <Welcome name={s.sponsors[0]?.name} />;
@@ -58,7 +61,7 @@ export default async function PortalHome() {
                 </div>
                 <p className="text-sm text-muted mt-1">
                   {s.sponsors.length > 1 && <>{sponsorName[c.sponsor_id]} · </>}
-                  {campaignDates(c)} · {NEXT_STEP[c.status]}
+                  {awaitingPayment(c) ? "Approved. Book your dates to go live" : <>{campaignDates(c)} · {NEXT_STEP[c.status]}</>}
                 </p>
               </div>
               <dl className="grid grid-cols-3 gap-4 md:gap-8 text-right">

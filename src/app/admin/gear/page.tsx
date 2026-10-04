@@ -59,6 +59,8 @@ export default async function GearAdmin() {
           <div><label className="label" htmlFor="f-sort">Sort</label><input id="f-sort" name="sort" type="number" className="input" defaultValue={0} /></div>
           <label className="flex items-center gap-2 text-sm md:col-span-3"><input type="checkbox" name="keep_after_end" defaultChecked />
             Players who unlocked it keep it after the campaign ends</label>
+          <label className="flex items-center gap-2 text-sm md:col-span-3"><input type="checkbox" name="pro_included" defaultChecked />
+            SnowThumb Pro players get it free (everyone else pays the unlock above)</label>
         </ActionForm>
 
         <div className="card overflow-x-auto mt-4">

@@ -16,6 +16,8 @@ const GA_EVENTS: Record<string, string> = {
   template_downloaded: "template_downloaded",
   apply_started: "apply_started",
   apply_submitted: "generate_lead",
+  checkout_started: "begin_checkout",
+  campaign_purchased: "purchase",
 };
 
 type Props = Record<string, string | number | boolean | string[] | null | undefined>;

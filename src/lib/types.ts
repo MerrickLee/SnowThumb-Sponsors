@@ -50,6 +50,29 @@ export type Campaign = {
   review_notes: string | null;
   submitted_at: string | null;
   approved_at: string | null;
+  requires_payment: boolean;
+  paid_at: string | null;
+  gear_starts_at: string | null;
+  gear_ends_at: string | null;
+  created_at: string;
+};
+
+export type OrderStatus = "pending" | "paid" | "canceled" | "refunded";
+
+export type CampaignOrder = {
+  id: string;
+  campaign_id: string;
+  sponsor_id: string;
+  product: "placements" | "gear";
+  term: "day" | "month" | "year";
+  days: number;
+  start_on: string;
+  unit_amount_cents: number;
+  amount_cents: number;
+  status: OrderStatus;
+  window_starts_at: string | null;
+  window_ends_at: string | null;
+  paid_at: string | null;
   created_at: string;
 };
 

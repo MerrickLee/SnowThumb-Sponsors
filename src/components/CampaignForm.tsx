@@ -8,12 +8,13 @@ const day = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString("en-CA", { timeZone: "America/New_York" }) : "";
 
 export function CampaignForm({
-  action, campaign, sponsors, disabled,
+  action, campaign, sponsors, disabled, showDates = true,
 }: {
   action: (s: ActionState, f: FormData) => Promise<ActionState>;
   campaign?: Campaign;
   sponsors?: Sponsor[];
   disabled?: boolean;
+  showDates?: boolean; // paid campaigns pick dates at checkout instead
 }) {
   const [state, formAction, pending] = useActionState(action, {});
   const [start, setStart] = useState(day(campaign?.starts_at ?? null));
@@ -44,6 +45,7 @@ export function CampaignForm({
         <input id="link_url" name="link_url" className="input" inputMode="url" defaultValue={campaign?.link_url ?? ""} disabled={disabled} placeholder="https://yourbrand.com/snowthumb" />
         <p className="hint">Opens from the gear shop and the post-run card, never mid-run. We add UTM tags so you can see SnowThumb traffic in your analytics.</p>
       </div>
+      {showDates && (<>
       <div>
         <label className="label" htmlFor="starts_at">Start date <span className="font-normal text-muted">optional</span></label>
         <input id="starts_at" name="starts_at" type="date" className="input" defaultValue={start} disabled={disabled} onChange={(e) => setStart(e.target.value)} />
@@ -54,6 +56,7 @@ export function CampaignForm({
         <input id="ends_at" name="ends_at" type="date" className="input" min={start || undefined} defaultValue={day(campaign?.ends_at ?? null)} disabled={disabled} />
         <p className="hint">Leave blank to run until you pause it.</p>
       </div>
+      </>)}
       <div className="md:col-span-2">
         <label className="label" htmlFor="notes">Notes for our team <span className="font-normal text-muted">optional</span></label>
         <textarea id="notes" name="notes" rows={3} className="textarea" defaultValue={campaign?.notes ?? ""} disabled={disabled} placeholder="Anything we should know: launch timing, which placements matter most…" />

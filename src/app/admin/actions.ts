@@ -91,6 +91,14 @@ export async function updateCampaignAdmin(_: AdminState, form: FormData): Promis
   return { ok: "Saved." };
 }
 
+/** Comp a campaign (no payment needed) or put it back on paid booking. */
+export async function setRequiresPayment(form: FormData) {
+  await requireAdmin();
+  const supabase = await createClient();
+  await supabase.from("campaigns").update({ requires_payment: form.get("requires_payment") === "true" }).eq("id", String(form.get("id")));
+  revalidatePath("/admin/campaigns");
+}
+
 /** Pause / resume / archive without touching creatives. Approval goes through the review function. */
 export async function setCampaignStatus(form: FormData) {
   await requireAdmin();
@@ -151,6 +159,7 @@ export async function saveGear(_: AdminState, form: FormData): Promise<AdminStat
     score_threshold: unlock === "score" ? intOrNull(form.get("score_threshold")) : null,
     iap_product_id: unlock === "iap" ? g("iap_product_id") || null : null,
     keep_after_end: form.get("keep_after_end") === "on",
+    pro_included: form.get("pro_included") === "on",
     sort: Number(g("sort") || 0),
     active: true,
   };
