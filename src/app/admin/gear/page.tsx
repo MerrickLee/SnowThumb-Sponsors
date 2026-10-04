@@ -14,13 +14,14 @@ const TRICKS: [string, string][] = [
 
 export default async function GearAdmin() {
   const supabase = await createClient();
-  const [{ data: gear }, { data: challenges }, { data: slots }, { data: creatives }, { data: sponsors }] = await Promise.all([
+  const [{ data: gear }, { data: challenges }, { data: slots }, { data: creatives }, { data: sponsors }, { data: campaigns }] = await Promise.all([
     supabase.from("gear_items").select("*, sponsors(name)").order("sort"),
-    supabase.from("challenges").select("*, sponsors(name)").order("created_at", { ascending: false }),
+    supabase.from("challenges").select("*, sponsors(name), campaigns(name)").order("created_at", { ascending: false }),
     supabase.from("slots").select("id, label, base_model_id, kind").in("kind", ["board", "binding"]).order("sort"),
     supabase.from("creatives").select("id, slot_id, campaigns(name), sponsors(name)").eq("status", "approved").in("slot_id",
       ["board_twin_v1", "board_directional_v1", "binding_classic_v1"]),
     supabase.from("sponsors").select("id, name").order("name"),
+    supabase.from("campaigns").select("id, name, sponsor_id, sponsors(name, is_house)").in("status", ["approved", "paused"]).order("created_at", { ascending: false }),
   ]);
 
   return (
@@ -96,11 +97,15 @@ export default async function GearAdmin() {
             {TRICKS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select></div>
           <div><label className="label" htmlFor="f-target-count">Target count</label><input id="f-target-count" name="target_count" type="number" min={1} className="input" defaultValue={1} /></div>
-          <div><label className="label" htmlFor="f-min-points">Min run points</label><input id="f-min-points" name="min_points" type="number" min={0} className="input" defaultValue={0} /></div>
+          <div><label className="label" htmlFor="f-min-points">Min trick points</label><input id="f-min-points" name="min_points" type="number" min={0} className="input" defaultValue={0} /></div>
           <div><label className="label" htmlFor="f-reward-gear-id">Reward gear</label><select id="f-reward-gear-id" name="reward_gear_id" className="select">
             <option value="">None</option>{(gear ?? []).map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</select></div>
           <div><label className="label" htmlFor="f-sponsor-id-2">Sponsor (if no reward)</label><select id="f-sponsor-id-2" name="sponsor_id" className="select">
             <option value="">House / none</option>{(sponsors ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
+          <div><label className="label" htmlFor="f-prize-cred">Prize (Cred)</label><input id="f-prize-cred" name="prize_cred" type="number" min={0} max={100000} step={50} className="input" defaultValue={500} /></div>
+          <div><label className="label" htmlFor="f-campaign-id">Sponsor campaign</label><select id="f-campaign-id" name="campaign_id" className="select">
+            <option value="">None (house)</option>{(campaigns ?? []).map((c) => <option key={c.id} value={c.id}>{(c.sponsors as unknown as { name: string } | null)?.name ?? ""} · {c.name}</option>)}</select></div>
+          <p className="md:col-span-4 text-xs text-muted">In-game prizes only at launch (Cred or a sponsor board). A challenge tied to a campaign only shows while that campaign is live, and its results appear on the sponsor&apos;s campaign page.</p>
           <div><label className="label" htmlFor="f-starts-at">Start</label><input id="f-starts-at" name="starts_at" type="date" className="input" /></div>
           <div><label className="label" htmlFor="f-ends-at">End</label><input id="f-ends-at" name="ends_at" type="date" className="input" /></div>
         </ActionForm>
@@ -113,7 +118,7 @@ export default async function GearAdmin() {
                 <tr key={c.id} className={c.active ? "" : "opacity-50"}>
                   <td>{c.title}<span className="text-muted text-xs block">{(c.sponsors as { name: string } | null)?.name ?? "House"}</span></td>
                   <td className="text-sm">{c.target_count}× {c.trick} on {c.feature} ({c.scope === "run" ? "one run" : "total"}){c.min_points ? `, ≥${c.min_points} pts` : ""}</td>
-                  <td className="font-mono text-xs">{c.reward_gear_id ?? "None"}</td>
+                  <td className="text-sm">{[c.prize_cred ? `${c.prize_cred} Cred` : "", c.reward_gear_id ?? ""].filter(Boolean).join(" + ") || "None"}{(c.campaigns as { name: string } | null)?.name && <span className="text-muted text-xs block">{(c.campaigns as { name: string }).name}</span>}</td>
                   <td className="text-muted text-sm">{campaignDates(c)}</td>
                   <td><form action={toggleChallenge}><input type="hidden" name="id" value={c.id} /><input type="hidden" name="active" value={String(!c.active)} />
                     <button className="btn btn-sm">{c.active ? "Disable" : "Enable"}</button></form></td>

@@ -41,10 +41,12 @@ export default async function CampaignPage({ params, searchParams }: PageProps<"
   const { data: campaign } = await supabase.from("campaigns").select("*").eq("id", id).maybeSingle<Campaign>();
   if (!campaign) notFound();
 
-  const [{ data: slots }, { data: creatives }, { data: orderRows }] = await Promise.all([
+  const [{ data: slots }, { data: creatives }, { data: orderRows }, { data: challengeRows }, { data: totalsRow }] = await Promise.all([
     supabase.from("slots").select("*").eq("sellable", true).order("sort"),
     supabase.from("creatives").select("*").eq("campaign_id", id),
     supabase.from("campaign_orders").select("*").eq("campaign_id", id).in("status", ["paid", "refunded"]).order("created_at", { ascending: false }),
+    supabase.from("challenges").select("id, title, description, target_count, scope, prize_cred, reward_gear_id, starts_at, ends_at, active").eq("campaign_id", id).order("created_at"),
+    supabase.from("campaign_stats_totals").select("challenge_starts, challenge_completes").eq("campaign_id", id).maybeSingle(),
   ]);
   const orders = (orderRows ?? []) as CampaignOrder[];
   const crs = (creatives ?? []) as Creative[];
@@ -176,6 +178,27 @@ export default async function CampaignPage({ params, searchParams }: PageProps<"
               </div>
             )}
           </div>
+        </section>
+      )}
+
+      {(challengeRows ?? []).length > 0 && (
+        <section className="mb-10" aria-labelledby="ch-h">
+          <h2 id="ch-h" className="title text-xl mb-1">Your sponsored challenges</h2>
+          <p className="text-muted mb-3 text-sm">Shown on the game&apos;s first screen while your campaign is live. Prizes are in-game only (Cred or your board).</p>
+          <div className="card divide-y divide-line">
+            {(challengeRows ?? []).map((ch) => (
+              <div key={ch.id} className="p-4 flex flex-wrap items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-semibold">{ch.title}{!ch.active && <span className="text-xs text-muted"> · off</span>}</p>
+                  <p className="text-sm text-muted">{ch.description ?? `${ch.target_count}× ${ch.scope === "run" ? "in one run" : "across runs"}`} · {campaignDates(ch)}</p>
+                </div>
+                <p className="text-sm">{[ch.prize_cred ? `${ch.prize_cred.toLocaleString()} Cred` : "", ch.reward_gear_id ? "your board" : ""].filter(Boolean).join(" + ") || "No prize"}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-sm text-muted mt-2">
+            {(totalsRow?.challenge_starts ?? 0).toLocaleString()} players started · {(totalsRow?.challenge_completes ?? 0).toLocaleString()} finished (all your challenges, so far).
+          </p>
         </section>
       )}
 

@@ -184,8 +184,12 @@ export async function saveChallenge(_: AdminState, form: FormData): Promise<Admi
   const g = (k: string) => String(form.get(k) ?? "").trim();
   const reward = g("reward_gear_id") || null;
   let sponsor_id = g("sponsor_id") || null;
-  let campaign_id: string | null = null;
-  if (reward) {
+  let campaign_id: string | null = g("campaign_id") || null;
+  if (campaign_id) {
+    const { data: camp } = await supabase.from("campaigns").select("sponsor_id").eq("id", campaign_id).single();
+    sponsor_id = camp?.sponsor_id ?? sponsor_id;
+  }
+  if (reward && !campaign_id) {
     const { data: gear } = await supabase.from("gear_items").select("sponsor_id, campaign_id").eq("id", reward).single();
     sponsor_id = gear?.sponsor_id ?? sponsor_id;
     campaign_id = gear?.campaign_id ?? null;
@@ -197,6 +201,7 @@ export async function saveChallenge(_: AdminState, form: FormData): Promise<Admi
     target_count: Math.max(1, Number(g("target_count") || 1)),
     min_points: Math.max(0, Number(g("min_points") || 0)),
     reward_gear_id: reward, sponsor_id, campaign_id,
+    prize_cred: Math.min(100000, Math.max(0, Number(g("prize_cred") || 0))),
     starts_at: starts ? easternDayToIso(starts, "start") : null,
     ends_at: ends ? easternDayToIso(ends, "end") : null,
   });
