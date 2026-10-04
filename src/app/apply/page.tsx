@@ -90,7 +90,7 @@ export default async function ApplyPage() {
         <section id="placements" className="mx-auto max-w-6xl px-4 py-12 md:py-16 scroll-mt-16">
           <p className="eyebrow">Placements</p>
           <h2 className="title text-3xl md:text-4xl mt-2">Where your brand shows up.</h2>
-          <p className="text-muted mt-2 max-w-2xl">All art is PNG or JPEG at the exact size listed. The console checks sizes before you upload, and every placement comes with a downloadable template.</p>
+          <p className="text-muted mt-2 max-w-2xl">Packages are exclusive: while you&apos;re on, no other brand shares your banners or features. If two brands book the same dates, each player sees one brand at a time, switching every 3 runs when the park layout changes. All art is PNG or JPEG at the exact size listed, and every placement has a template.</p>
           <div className="grid md:grid-cols-2 gap-4 mt-8 [&>*]:min-w-0">
             {groups.map(({ kind, slots }) => (
               <TrackOnView key={kind} event="placement_viewed" props={{ slot_kind: kind }} className="card p-5">

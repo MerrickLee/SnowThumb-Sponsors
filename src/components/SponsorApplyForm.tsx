@@ -7,8 +7,8 @@ const ENDPOINT = `${process.env.NEXT_PUBLIC_FUNCTIONS_URL ?? `${process.env.NEXT
 
 const SLOTS = [
   { value: "board", label: "Sponsored board", hint: "Under the rider's feet, first person" },
-  { value: "banner", label: "Park banners", hint: "Start gate, walls, finish" },
-  { value: "feature_wrap", label: "Feature wraps", hint: "Rails, box tops, kickers" },
+  { value: "banner", label: "Banner package", hint: "Every banner in the park + Today’s sponsor" },
+  { value: "feature_wrap", label: "Feature package", hint: "Every rail, box top and kicker" },
   { value: "event_title", label: "Night session title", hint: "“Presented by” the event" },
 ];
 

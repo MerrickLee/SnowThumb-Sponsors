@@ -15,8 +15,8 @@ export async function getSellableSlots(): Promise<Slot[]> {
 }
 
 export const KIND_PITCH: Record<string, { title: string; why: string }> = {
-  banner: { title: "Park banners", why: "Seen every run, from the drop-in to the finish corral." },
-  feature_wrap: { title: "Feature wraps", why: "Your logo on the rails, boxes and kickers players aim for." },
+  banner: { title: "Banner package", why: "Own every banner in the park, from the overhead blades at the drop-in to the finish wall, and get named Today's sponsor in the game. One file covers them all." },
+  feature_wrap: { title: "Feature package", why: "Own every rail, box top and kicker riders aim for. One file per feature size." },
   board: { title: "Sponsored board", why: "First person, so players look at your board the entire run." },
   binding: { title: "Sponsored bindings", why: "Visible every run in first person." },
   event_title: { title: "Night session title", why: "“Presented by” the after-dark park event." },

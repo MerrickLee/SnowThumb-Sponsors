@@ -35,6 +35,22 @@ export function SlotUploader({
   const [local, setLocal] = useState<Record<string, string>>({});
   const [over, setOver] = useState<string | null>(null);
   const bySlot = Object.fromEntries(creatives.map((c) => [c.slot_id, c]));
+
+  // Banner package: every banner in the park is the same size and one brand owns them all,
+  // so the sponsor uploads one file and it's saved for every banner slot.
+  const bannerIds = slots.filter((s) => s.kind === "banner").map((s) => s.id);
+  const targets: Record<string, string[]> = {};
+  const units: Slot[] = [];
+  for (const sl of slots) {
+    if (sl.kind === "banner" && bannerIds.length > 1) {
+      if (sl.id !== bannerIds[0]) continue;
+      targets[sl.id] = bannerIds;
+      units.push({ ...sl, label: "Banner package", description: "One file runs on every banner in the park: overhead, both walls and the finish wall. No other brand shares them while you're on." });
+    } else {
+      units.push(sl);
+    }
+  }
+  const creativeFor = (sl: Slot) => bySlot[sl.id] ?? (targets[sl.id] ?? []).map((id) => bySlot[id]).find(Boolean);
   const say = (id: string, m: Msg | null) => setMsg((x) => { const n = { ...x }; if (m) n[id] = m; else delete n[id]; return n; });
 
   async function upload(slot: Slot, file: File) {
@@ -58,7 +74,8 @@ export function SlotUploader({
     if (upErr) { setBusy(null); return say(slot.id, { tone: "bad", text: `Upload failed: ${upErr.message}. Try again.` }); }
 
     const { error: dbErr } = await supabase.from("creatives").upsert(
-      { campaign_id: campaignId, sponsor_id: sponsorId, slot_id: slot.id, upload_path: path, status: "pending", live_path: null, public_url: null, sha256: null },
+      (targets[slot.id] ?? [slot.id]).map((slot_id) => (
+        { campaign_id: campaignId, sponsor_id: sponsorId, slot_id, upload_path: path, status: "pending", live_path: null, public_url: null, sha256: null })),
       { onConflict: "campaign_id,slot_id" },
     );
     setBusy(null);
@@ -70,10 +87,11 @@ export function SlotUploader({
   }
 
   async function remove(slot: Slot) {
-    const c = bySlot[slot.id];
+    const c = creativeFor(slot);
     if (!c) return;
     setBusy(slot.id);
-    const { error } = await createClient().from("creatives").delete().eq("id", c.id);
+    const { error } = await createClient().from("creatives").delete()
+      .eq("campaign_id", campaignId).in("slot_id", targets[slot.id] ?? [slot.id]);
     setBusy(null);
     if (error) return say(slot.id, { tone: "bad", text: error.message });
     setLocal((l) => { const n = { ...l }; delete n[slot.id]; return n; });
@@ -83,8 +101,8 @@ export function SlotUploader({
 
   return (
     <div className="grid lg:grid-cols-2 gap-4">
-      {slots.map((slot) => {
-        const c = bySlot[slot.id];
+      {units.map((slot) => {
+        const c = creativeFor(slot);
         const src = local[slot.id] ?? (c ? previews[c.id] : undefined);
         const m = msg[slot.id];
         const isBusy = busy === slot.id;
@@ -99,6 +117,8 @@ export function SlotUploader({
               <div>
                 <h3 className="font-bold">{slot.label}</h3>
                 <p className="text-xs text-muted">{SLOT_KIND_LABEL[slot.kind]} · <span className="num">{slot.width}×{slot.height}px</span> · {Math.round(slot.max_bytes / 1024)} KB max</p>
+                {targets[slot.id] && <p className="text-sm text-muted mt-1 max-w-md">{slot.description}</p>}
+                {slot.kind === "feature_wrap" && <p className="text-xs text-muted mt-1">Feature package: one file per feature size. Your brand owns every rail, box and kicker.</p>}
               </div>
               {c && <StatusBadge status={c.status} />}
             </div>
