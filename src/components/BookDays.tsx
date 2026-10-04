@@ -35,7 +35,7 @@ export function BookDays({
   const [start, setStart] = useState(today);
   const valid = Number.isInteger(days) && days >= MIN_DAYS && days <= MAX_DAYS;
   const first = extendFrom ? addDays(extendFrom, 1) : start;
-  const last = addDays(first, Math.max(days, 1) - 1);
+  const last = addDays(first, (valid ? days : 1) - 1);
 
   return (
     <form action={formAction} onSubmitCapture={() => { if (device.current) device.current.value = deviceId() ?? ""; track("checkout_started", { campaign_id: campaignId, product: "placements", days, currency: "USD", value: totalCents(days) / 100, extend: !!extendFrom }); }}
