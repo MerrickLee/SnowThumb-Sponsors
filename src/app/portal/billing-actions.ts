@@ -88,6 +88,8 @@ export async function startCheckout(_: ActionState, form: FormData): Promise<Act
       // (merchant of record) doesn't cover. Stripe defaults new accounts to it, so opt out.
       managed_payments: { enabled: false },
       client_reference_id: order.id,
+      // Promo codes (Stripe promotion codes). A 100%-off code finishes with nothing charged.
+      allow_promotion_codes: true,
       metadata: {
         order_id: order.id, campaign_id: c.id, sponsor_id: c.sponsor_id, product, term, days: String(days), start_on: startOn,
         user_id: session.userId, amp_device_id: deviceId ?? "", analytics: consent ? "1" : "0",

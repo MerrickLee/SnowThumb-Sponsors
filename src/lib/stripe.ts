@@ -32,7 +32,8 @@ export async function applyPaidSession(session: Stripe.Checkout.Session, via: "w
     order_id: md.order_id, campaign_id: md.campaign_id, sponsor_id: md.sponsor_id, product: md.product, term: md.term,
     days: Number(md.days) || undefined, value: (session.amount_total ?? 0) / 100, currency: (session.currency ?? "usd").toUpperCase(), via,
   };
-  if (session.payment_status !== "paid") {
+  // "no_payment_required" = a promo code covered the whole total.
+  if (session.payment_status !== "paid" && session.payment_status !== "no_payment_required") {
     // Card accepted but money not in yet (bank debits etc.); the async webhook finishes it.
     await trackServer("payment_pending", who, { ...props, payment_status: session.payment_status }, `pending_${session.id}`);
     return null;
@@ -44,9 +45,19 @@ export async function applyPaidSession(session: Stripe.Checkout.Session, via: "w
     await trackServer("payment_apply_failed", who, { ...props, detail: error.message.slice(0, 300) });
     throw new Error(`apply_campaign_payment: ${error.message}`);
   }
+  // Remember which promo code paid for it, so it can be revoked later.
+  const promo = await promoUsed(session);
+  await admin.from("campaign_orders").update({
+    promo_code: promo?.code ?? null, promotion_code_id: promo?.id ?? null,
+    discount_cents: session.total_details?.amount_discount ?? 0, paid_cents: session.amount_total ?? 0,
+  }).eq("stripe_session_id", session.id);
+
   // Same insert_id from the webhook and the return page, so Amplitude counts it once.
   const o = data as { window_starts_at?: string; window_ends_at?: string } | null;
-  await trackServer("payment_succeeded", who, { ...props, window_starts_at: o?.window_starts_at, window_ends_at: o?.window_ends_at }, `paid_${session.id}`);
+  await trackServer("payment_succeeded", who, {
+    ...props, window_starts_at: o?.window_starts_at, window_ends_at: o?.window_ends_at,
+    promo_code: promo?.code ?? "", discount: (session.total_details?.amount_discount ?? 0) / 100, free: session.payment_status === "no_payment_required",
+  }, `paid_${session.id}`);
 
   // Remember the Stripe customer so their next checkout is prefilled.
   const customer = typeof session.customer === "string" ? session.customer : session.customer?.id;
@@ -55,4 +66,18 @@ export async function applyPaidSession(session: Stripe.Checkout.Session, via: "w
     await admin.from("sponsors").update({ stripe_customer_id: customer }).eq("id", sponsorId).is("stripe_customer_id", null);
   }
   return data;
+}
+
+/** The promotion code a Checkout Session used, if any (the session only carries its id). */
+async function promoUsed(session: Stripe.Checkout.Session): Promise<{ id: string; code: string } | null> {
+  const d = session.discounts?.find((x) => x.promotion_code);
+  const pc = d?.promotion_code;
+  if (!pc) return null;
+  if (typeof pc !== "string") return { id: pc.id, code: pc.code };
+  try {
+    const full = await getStripe().promotionCodes.retrieve(pc);
+    return { id: full.id, code: full.code };
+  } catch {
+    return { id: pc, code: pc };
+  }
 }

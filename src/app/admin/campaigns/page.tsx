@@ -14,11 +14,11 @@ export default async function AdminCampaigns({ searchParams }: PageProps<"/admin
   const sp = await searchParams;
   const status = typeof sp.status === "string" ? sp.status : "";
   const supabase = await createClient();
-  let q = supabase.from("campaigns").select("*, sponsors(name, is_house), campaign_orders(amount_cents, status)").order("created_at", { ascending: false });
+  let q = supabase.from("campaigns").select("*, sponsors(name, is_house), campaign_orders(amount_cents, paid_cents, promo_code, status)").order("created_at", { ascending: false });
   if (status) q = q.eq("status", status);
   const { data } = await q;
-  const list = (data ?? []) as (Campaign & { sponsors: { name: string; is_house: boolean }; campaign_orders: { amount_cents: number; status: string }[] })[];
-  const paidTotal = (c: (typeof list)[number]) => c.campaign_orders.filter((o) => o.status === "paid").reduce((n, o) => n + o.amount_cents, 0);
+  const list = (data ?? []) as (Campaign & { sponsors: { name: string; is_house: boolean }; campaign_orders: { amount_cents: number; paid_cents: number | null; promo_code: string | null; status: string }[] })[];
+  const paidTotal = (c: (typeof list)[number]) => c.campaign_orders.filter((o) => o.status === "paid").reduce((n, o) => n + (o.paid_cents ?? o.amount_cents), 0);
   const revenue = list.reduce((n, c) => n + paidTotal(c), 0);
   const filters: [string, string][] = [["", "All"], ["approved", "Live"], ["submitted", "In review"], ["draft", "Draft"], ["rejected", "Sent back"], ["paused", "Paused"], ["archived", "Archived"]];
 
@@ -51,7 +51,7 @@ export default async function AdminCampaigns({ searchParams }: PageProps<"/admin
                   <StatusBadge status={c.status} />
                   {!c.sponsors.is_house && (
                     <span className="text-xs text-muted">
-                      {!c.requires_payment ? "Comped" : paidTotal(c) ? `Paid ${usd(paidTotal(c))}` : "Not paid"}
+                      {!c.requires_payment ? "Comped" : paidTotal(c) ? `Paid ${usd(paidTotal(c))}` : c.campaign_orders.some((o) => o.status === "paid" && o.promo_code) ? "Free with code" : "Not paid"}
                       {c.gear_ends_at && ` · gear shop to ${day(c.gear_ends_at)}`}
                     </span>
                   )}

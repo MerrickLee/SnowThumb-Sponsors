@@ -57,7 +57,7 @@ export type Campaign = {
   created_at: string;
 };
 
-export type OrderStatus = "pending" | "paid" | "canceled" | "refunded";
+export type OrderStatus = "pending" | "paid" | "canceled" | "refunded" | "revoked";
 
 export type CampaignOrder = {
   id: string;
@@ -74,6 +74,11 @@ export type CampaignOrder = {
   window_ends_at: string | null;
   paid_at: string | null;
   created_at: string;
+  promo_code: string | null;
+  promotion_code_id: string | null;
+  discount_cents: number;
+  paid_cents: number | null;
+  revoked_at: string | null;
 };
 
 export type Creative = {

@@ -44,7 +44,7 @@ export default async function CampaignPage({ params, searchParams }: PageProps<"
   const [{ data: slots }, { data: creatives }, { data: orderRows }, { data: challengeRows }, { data: totalsRow }] = await Promise.all([
     supabase.from("slots").select("*").eq("sellable", true).order("sort"),
     supabase.from("creatives").select("*").eq("campaign_id", id),
-    supabase.from("campaign_orders").select("*").eq("campaign_id", id).in("status", ["paid", "refunded"]).order("created_at", { ascending: false }),
+    supabase.from("campaign_orders").select("*").eq("campaign_id", id).in("status", ["paid", "refunded", "revoked"]).order("created_at", { ascending: false }),
     supabase.from("challenges").select("id, title, description, target_count, scope, prize_cred, reward_gear_id, starts_at, ends_at, active").eq("campaign_id", id).order("created_at"),
     supabase.from("campaign_stats_totals").select("challenge_starts, challenge_completes").eq("campaign_id", id).maybeSingle(),
   ]);
@@ -213,9 +213,10 @@ export default async function CampaignPage({ params, searchParams }: PageProps<"
                   <p className="text-sm text-muted">{campaignDates({ starts_at: o.window_starts_at, ends_at: o.window_ends_at })}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold">{usd(o.amount_cents)}</p>
-                  <p className={`text-xs ${o.status === "refunded" ? "text-bad" : "text-muted"}`}>
-                    {o.status === "refunded" ? "Refunded" : `Paid ${new Date(o.paid_at ?? o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" })}`}
+                  <p className="font-semibold">{usd(o.paid_cents ?? o.amount_cents)}</p>
+                  {o.promo_code && <p className="text-xs text-muted">Code {o.promo_code.toUpperCase()} · {usd(o.discount_cents)} off</p>}
+                  <p className={`text-xs ${o.status === "refunded" || o.status === "revoked" ? "text-bad" : "text-muted"}`}>
+                    {o.status === "refunded" ? "Refunded" : o.status === "revoked" ? "Code revoked. These days were removed." : `Paid ${new Date(o.paid_at ?? o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" })}`}
                   </p>
                 </div>
               </div>
