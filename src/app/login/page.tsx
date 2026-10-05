@@ -64,8 +64,18 @@ function LoginForm() {
     <main id="main" className="flex-1 grid lg:grid-cols-2">
       <section className="flex flex-col px-5 sm:px-10 py-8">
         <Logo height={28} href="/apply" />
-        <div className="flex-1 grid place-items-center py-10">
+        <div className="flex-1 grid justify-items-center items-start lg:items-center py-6 lg:py-10">
           <div className="w-full max-w-sm">
+            {/* Up top so new brands see it first (the cookie banner covers the bottom of the screen). */}
+            <a href="/apply" onClick={() => track("become_sponsor_clicked", { from: "login" })}
+              className="group block rounded-xl bg-text text-white p-5 mb-8 shadow-lg hover:bg-sky transition-colors">
+              <p className="text-xs font-bold uppercase tracking-widest text-[#8cc8ff] group-hover:text-white">Not a sponsor yet?</p>
+              <p className="title text-2xl mt-1">Become a SnowThumb sponsor</p>
+              <p className="text-sm text-white/80 mt-1">Banners, boards and challenges players ride every day.</p>
+              <span className="inline-flex items-center gap-1 mt-4 rounded-lg bg-white text-text px-4 py-2 text-sm font-bold">
+                See placements and apply <span aria-hidden="true">→</span>
+              </span>
+            </a>
             <p className="eyebrow text-sky">Sponsor console</p>
             <h1 className="title text-4xl mt-2">Sign in</h1>
             <p className="text-muted mt-2">We&apos;ll email you a one-time link. No password to remember.</p>
@@ -109,9 +119,6 @@ function LoginForm() {
               </form>
             )}
 
-            <p className="text-sm text-muted mt-10 pt-6 border-t border-line">
-              Not a sponsor yet? <a className="link" href="/apply">See placements and apply</a>
-            </p>
           </div>
         </div>
       </section>
