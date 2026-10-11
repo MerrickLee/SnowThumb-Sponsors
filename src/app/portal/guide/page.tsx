@@ -32,6 +32,16 @@ export default async function Guide() {
       <PageHeader eyebrow="Art guide" title="Make art that reads at speed."
         sub="Specs, templates and rules for every placement. Download a template, design inside the safe zone, and export at the exact size." />
 
+      <div className="card p-4 mb-6 bg-accent-soft/40 border-accent/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <span className="font-bold text-text text-sm block">Looking for pricing &amp; placement terms?</span>
+          <span className="text-xs text-muted">Park takeovers ($50/day), boards ($500/mo), and bindings &amp; boots ($200/mo).</span>
+        </div>
+        <a href="/pricing" className="btn btn-sm btn-primary shrink-0">
+          View Opportunities &amp; Pricing &rarr;
+        </a>
+      </div>
+
       <div className="grid md:grid-cols-2 gap-4 mb-10">
         <div className="card p-5">
           <h2 className="font-bold text-lg text-ok">Do</h2>

@@ -56,9 +56,24 @@ namespace SnowThumb.Sponsors
         public int cred_price;
         public int score_threshold;
         public string iap_product_id;
+        public bool pro_included;
         public bool has_link;
         public bool in_shop;           // false = only shown to players who already own it
         public int sort;
+        public GearColors colors;
+    }
+
+    [Serializable]
+    public class GearColors
+    {
+        public string style;           // step_on | strap
+        public string frame;           // #RRGGBB
+        public string strap;           // #RRGGBB
+        public string accent;          // #RRGGBB
+        public string shell;           // #RRGGBB
+        public string trim;            // #RRGGBB
+        public string laces;           // #RRGGBB
+        public string sole;            // #RRGGBB
     }
 
     [Serializable]

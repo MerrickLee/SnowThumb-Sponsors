@@ -15,9 +15,37 @@ export const GEAR_TERMS: Record<GearTerm, { label: string; days: number; cents: 
   year: { label: "1 year", days: 365, cents: 200_000, blurb: "365 days in the shop, about $167 a month" },
 };
 
+export const BOARD_MONTH_CENTS = 50_000;   // $500 / 30 days
+export const BINDING_MONTH_CENTS = 20_000; // $200 / 30 days
+export const BOOT_MONTH_CENTS = 20_000;    // $200 / 30 days
+
 export type Product = "placements" | "gear";
-export const GEAR_SLOT_KINDS = ["board", "binding"] as const;
+export const GEAR_SLOT_KINDS = ["board", "binding", "boot"] as const;
 export const isGearKind = (k: string) => (GEAR_SLOT_KINDS as readonly string[]).includes(k);
+
+/**
+ * Computes monthly cost for the approved gear kinds in a campaign.
+ * Bindings: $200 / 30 days
+ * Boots: $200 / 30 days
+ * Board: $500 / 30 days
+ */
+export function gearMonthlyCents(kinds: string[]): number {
+  let total = 0;
+  const unique = Array.from(new Set(kinds.filter(isGearKind)));
+  if (unique.includes("board")) total += BOARD_MONTH_CENTS;
+  if (unique.includes("binding")) total += BINDING_MONTH_CENTS;
+  if (unique.includes("boot")) total += BOOT_MONTH_CENTS;
+  return total > 0 ? total : BINDING_MONTH_CENTS;
+}
+
+export function gearBreakdown(kinds: string[]): { label: string; cents: number }[] {
+  const items: { label: string; cents: number }[] = [];
+  const unique = Array.from(new Set(kinds.filter(isGearKind)));
+  if (unique.includes("board")) items.push({ label: "Sponsored board", cents: BOARD_MONTH_CENTS });
+  if (unique.includes("binding")) items.push({ label: "Sponsored bindings", cents: BINDING_MONTH_CENTS });
+  if (unique.includes("boot")) items.push({ label: "Sponsored boots", cents: BOOT_MONTH_CENTS });
+  return items;
+}
 
 export const usd = (cents: number) =>
   (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: cents % 100 ? 2 : 0 });

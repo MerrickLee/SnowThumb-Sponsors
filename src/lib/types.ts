@@ -1,4 +1,4 @@
-export type SlotKind = "banner" | "feature_wrap" | "board" | "binding" | "event_title";
+export type SlotKind = "banner" | "feature_wrap" | "board" | "binding" | "boot" | "event_title";
 export type CampaignStatus = "draft" | "submitted" | "approved" | "rejected" | "paused" | "archived";
 export type CreativeStatus = "pending" | "approved" | "rejected" | "retired";
 export type UnlockType = "free" | "cred" | "score" | "challenge" | "iap";
@@ -8,6 +8,7 @@ export const SLOT_KIND_LABEL: Record<SlotKind, string> = {
   feature_wrap: "Feature wrap",
   board: "Board graphic",
   binding: "Binding graphic",
+  boot: "Boot graphic",
   event_title: "Event title",
 };
 
@@ -56,7 +57,52 @@ export type Campaign = {
   gear_ends_at: string | null;
   board_name: string | null;
   board_tagline: string | null;
+  binding_name: string | null;
+  binding_tagline: string | null;
+  binding_style: "step_on" | "strap" | null;
+  binding_frame: string | null;
+  binding_strap: string | null;
+  binding_accent: string | null;
+  boot_name: string | null;
+  boot_tagline: string | null;
+  boot_shell: string | null;
+  boot_trim: string | null;
+  boot_laces: string | null;
+  boot_sole: string | null;
   created_at: string;
+};
+
+export type GearColors = {
+  style?: "step_on" | "strap";
+  frame?: string;
+  strap?: string;
+  accent?: string;
+  shell?: string;
+  trim?: string;
+  laces?: string;
+  sole?: string;
+};
+
+export type GearItem = {
+  id: string;
+  kind: "board" | "binding" | "boot";
+  base_model_id: string;
+  name: string;
+  tagline: string | null;
+  sponsor_id: string | null;
+  campaign_id: string | null;
+  creative_id: string | null;
+  unlock: UnlockType;
+  cred_price: number | null;
+  score_threshold: number | null;
+  iap_product_id: string | null;
+  keep_after_end: boolean;
+  pro_included: boolean;
+  starts_at: string | null;
+  ends_at: string | null;
+  active: boolean;
+  sort: number;
+  colors: GearColors | null;
 };
 
 export type OrderStatus = "pending" | "paid" | "canceled" | "refunded" | "revoked";

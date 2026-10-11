@@ -20,11 +20,20 @@ export function SlotMockup({ slot, src }: { slot: Slot; src?: string }) {
     );
   }
 
+  if (slot.kind === "boot" || slot.id === "boot_logo") {
+    return (
+      <figure className="rounded-lg bg-surface-2 border border-line p-4">
+        <div className="relative overflow-hidden rounded-md w-32 mx-auto bg-surface p-2 ring-1 ring-line" style={{ aspectRatio: ratio }}>{art}</div>
+        <figcaption className="text-xs text-muted mt-2 text-center">Outer boot shaft decal</figcaption>
+      </figure>
+    );
+  }
+
   if (slot.kind === "binding") {
     return (
       <figure className="rounded-lg bg-surface-2 border border-line p-4">
-        <div className="relative overflow-hidden rounded-md w-40 mx-auto bg-white" style={{ aspectRatio: ratio }}>{art}</div>
-        <figcaption className="text-xs text-muted mt-2 text-center">Strap and highback</figcaption>
+        <div className="relative overflow-hidden rounded-md w-32 mx-auto bg-surface p-2 ring-1 ring-line" style={{ aspectRatio: ratio }}>{art}</div>
+        <figcaption className="text-xs text-muted mt-2 text-center">Binding highback and strap decal</figcaption>
       </figure>
     );
   }

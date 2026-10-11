@@ -10,7 +10,7 @@ import { getStripe } from "@/lib/stripe";
 import { env } from "@/lib/env";
 import {
   DAY_RATE_CENTS, GEAR_TERMS, MAX_DAYS, MAX_START_AHEAD_DAYS, MIN_DAYS, easternToday, isGearKind, totalCents,
-  type GearTerm,
+  gearMonthlyCents, type GearTerm,
 } from "@/lib/pricing";
 import type { ActionState } from "@/app/portal/actions";
 
@@ -36,22 +36,6 @@ export async function startCheckout(_: ActionState, form: FormData): Promise<Act
   const today = easternToday();
   const startOn = String(form.get("start_on") ?? "") || today;
 
-  let days: number, unit: number, quantity: number, term: "day" | GearTerm, itemName: string;
-  if (product === "gear") {
-    const t = String(form.get("term")) as GearTerm;
-    if (!(t in GEAR_TERMS)) return fail("bad_term", "Pick a month or a year.");
-    term = t; days = GEAR_TERMS[t].days; unit = GEAR_TERMS[t].cents; quantity = 1;
-    itemName = `SnowThumb gear shop listing (${GEAR_TERMS[t].label})`;
-  } else {
-    days = Number(form.get("days"));
-    if (!Number.isInteger(days) || days < MIN_DAYS || days > MAX_DAYS)
-      return fail("bad_days", `Pick between ${MIN_DAYS} and ${MAX_DAYS} days.`);
-    term = "day"; unit = DAY_RATE_CENTS; quantity = days;
-    itemName = "SnowThumb park placements (per day)";
-  }
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(startOn) || startOn < today || startOn > easternToday(MAX_START_AHEAD_DAYS))
-    return fail("bad_start", "Pick a start date between today and six months out.");
-
   // The sponsor's own client: RLS proves they can see this campaign.
   const supabase = await createClient();
   const { data: c } = await supabase.from("campaigns")
@@ -66,7 +50,34 @@ export async function startCheckout(_: ActionState, form: FormData): Promise<Act
   const { data: art } = await supabase.from("creatives").select("slots(kind)").eq("campaign_id", c.id).eq("status", "approved");
   const kinds = (art ?? []).map((r) => (r.slots as unknown as { kind: string } | null)?.kind ?? "");
   const has = product === "gear" ? kinds.some(isGearKind) : kinds.some((k) => k && !isGearKind(k));
-  if (!has) return fail("no_approved_art", product === "gear" ? "This campaign has no approved board or binding art." : "This campaign has no approved banner or feature art.");
+  if (!has) return fail("no_approved_art", product === "gear" ? "This campaign has no approved board, binding, or boot art." : "This campaign has no approved banner or feature art.");
+
+  let days: number, unit: number, quantity: number, term: "day" | GearTerm, itemName: string;
+  if (product === "gear") {
+    const t = String(form.get("term")) as GearTerm;
+    if (!(t in GEAR_TERMS)) return fail("bad_term", "Pick a month or a year.");
+    term = t;
+    const gearKinds = Array.from(new Set(kinds.filter(isGearKind)));
+    const monthlyRate = gearMonthlyCents(gearKinds);
+    if (t === "year") {
+      days = 365;
+      unit = gearKinds.length === 1 && gearKinds[0] === "board" ? GEAR_TERMS.year.cents : monthlyRate * 12;
+      itemName = `SnowThumb gear shop listing (${gearKinds.join(" + ")} - 1 year)`;
+    } else {
+      days = 30;
+      unit = monthlyRate;
+      itemName = `SnowThumb gear shop listing (${gearKinds.join(" + ")} - 30 days)`;
+    }
+    quantity = 1;
+  } else {
+    days = Number(form.get("days"));
+    if (!Number.isInteger(days) || days < MIN_DAYS || days > MAX_DAYS)
+      return fail("bad_days", `Pick between ${MIN_DAYS} and ${MAX_DAYS} days.`);
+    term = "day"; unit = DAY_RATE_CENTS; quantity = days;
+    itemName = "SnowThumb park placements (per day)";
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(startOn) || startOn < today || startOn > easternToday(MAX_START_AHEAD_DAYS))
+    return fail("bad_start", "Pick a start date between today and six months out.");
 
   let stripe;
   try { stripe = getStripe(); } catch { return fail("stripe_not_configured", "Payments aren't switched on yet. Email sponsors@snowthumb.com and we'll get you running."); }

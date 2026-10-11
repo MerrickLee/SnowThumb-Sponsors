@@ -137,7 +137,11 @@ export default async function CampaignPage({ params, searchParams }: PageProps<"
 
       <section className="mb-10" aria-labelledby="details-h">
         <h2 id="details-h" className="title text-xl mb-3">1. Details</h2>
-        <CampaignForm action={updateCampaign} campaign={campaign} disabled={!editable} showDates={!needsPayment} />
+        <CampaignForm action={updateCampaign} campaign={campaign} disabled={!editable} showDates={!needsPayment}
+          logoPreview={(() => {
+            const cr = crs.find((c) => c.slot_id === "binding_logo" || c.slot_id === "boot_logo");
+            return cr ? previews[cr.id] : null;
+          })()} />
       </section>
 
       <section className="mb-10" aria-labelledby="art-h">
@@ -170,11 +174,11 @@ export default async function CampaignPage({ params, searchParams }: PageProps<"
             )}
             {sellsGear && (
               <div>
-                <h3 className="font-bold mb-1">Your board in the gear shop · {usd(GEAR_TERMS.month.cents)} a month or {usd(GEAR_TERMS.year.cents)} a year</h3>
+                <h3 className="font-bold mb-1">Your gear in the gear shop</h3>
                 <p className="text-sm text-muted mb-3">
-                  {gearOpen ? `In the shop through ${campaignDates({ starts_at: null, ends_at: campaign.gear_ends_at }).replace(/^Now – /, "")}. Extend any time.` : "Players pick your board and ride it every run."}
+                  {gearOpen ? `In the shop through ${campaignDates({ starts_at: null, ends_at: campaign.gear_ends_at }).replace(/^Now – /, "")}. Extend any time.` : "Players unlock your gear in the Gear Room and ride it every run."}
                 </p>
-                <BookGear action={startCheckout} campaignId={campaign.id} extendFrom={gearOpen ? lastDay(campaign.gear_ends_at) : null} />
+                <BookGear action={startCheckout} campaignId={campaign.id} extendFrom={gearOpen ? lastDay(campaign.gear_ends_at) : null} gearKinds={approvedKinds.filter(isGearKind)} />
               </div>
             )}
           </div>

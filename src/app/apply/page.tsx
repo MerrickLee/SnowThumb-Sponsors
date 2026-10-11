@@ -28,6 +28,7 @@ export default async function ApplyPage() {
         <div className="mx-auto max-w-6xl px-4 h-14 flex items-center justify-between gap-4">
           <Logo height={22} href="https://snowthumb.com" />
           <div className="flex items-center gap-2">
+            <a href="/pricing" className="btn btn-sm btn-ghost"><span className="hidden sm:inline">Opportunities &amp; </span>Pricing</a>
             <a href="/login" className="btn btn-sm btn-ghost"><span className="sm:hidden">Sign in</span><span className="hidden sm:inline">Sponsor sign in</span></a>
             <a href="#apply" className="btn btn-sm btn-primary">Apply</a>
           </div>
@@ -48,7 +49,8 @@ export default async function ApplyPage() {
             </p>
             <div className="flex flex-wrap gap-3 mt-7">
               <a href="#apply" className="btn btn-primary">Apply to sponsor</a>
-              <a href="#placements" className="btn">See placements</a>
+              <a href="/pricing" className="btn">See pricing &amp; previews &rarr;</a>
+              <a href="#placements" className="btn btn-ghost">Placements</a>
             </div>
             <ul className="mt-8 grid sm:grid-cols-3 gap-3 text-sm">
               {[
@@ -90,7 +92,15 @@ export default async function ApplyPage() {
         <section id="placements" className="mx-auto max-w-6xl px-4 py-12 md:py-16 scroll-mt-16">
           <p className="eyebrow">Placements</p>
           <h2 className="title text-3xl md:text-4xl mt-2">Where your brand shows up.</h2>
-          <p className="text-muted mt-2 max-w-2xl">Packages are exclusive: while you&apos;re on, no other brand shares your banners or features. If two brands book the same dates, each player sees one brand at a time, switching every 3 runs when the park layout changes. All art is PNG or JPEG at the exact size listed, and every placement has a template.</p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-2 max-w-4xl">
+            <p className="text-muted text-sm sm:text-base">
+              Packages are exclusive: while you&apos;re on, no other brand shares your banners or features.
+              Park takeovers are <strong>$50/day</strong>, boards are <strong>$500/month</strong>, and bindings &amp; boots are <strong>$200/month</strong> each.
+            </p>
+            <a href="/pricing" className="btn btn-sm shrink-0 font-bold">
+              View Detailed Pricing &rarr;
+            </a>
+          </div>
           <div className="grid md:grid-cols-2 gap-4 mt-8 [&>*]:min-w-0">
             {groups.map(({ kind, slots }) => (
               <TrackOnView key={kind} event="placement_viewed" props={{ slot_kind: kind }} className="card p-5">

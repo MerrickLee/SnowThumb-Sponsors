@@ -3,18 +3,20 @@
 import { useActionState, useState } from "react";
 import type { ActionState } from "@/app/portal/actions";
 import type { Campaign, Sponsor } from "@/lib/types";
+import { GearCustomizer } from "@/components/GearCustomizer";
 
 const day = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString("en-CA", { timeZone: "America/New_York" }) : "";
 
 export function CampaignForm({
-  action, campaign, sponsors, disabled, showDates = true,
+  action, campaign, sponsors, disabled, showDates = true, logoPreview,
 }: {
   action: (s: ActionState, f: FormData) => Promise<ActionState>;
   campaign?: Campaign;
   sponsors?: Sponsor[];
   disabled?: boolean;
   showDates?: boolean; // paid campaigns pick dates at checkout instead
+  logoPreview?: string | null;
 }) {
   const [state, formAction, pending] = useActionState(action, {});
   const [start, setStart] = useState(day(campaign?.starts_at ?? null));
@@ -74,6 +76,7 @@ export function CampaignForm({
           <p className="hint">One short line, up to 90 characters.</p>
         </div>
       </fieldset>
+      <GearCustomizer campaign={campaign} disabled={disabled} sponsorId={campaign?.sponsor_id ?? sponsors?.[0]?.id} existingLogoUrl={logoPreview} />
       <div className="md:col-span-2">
         <label className="label" htmlFor="notes">Notes for our team <span className="font-normal text-muted">optional</span></label>
         <textarea id="notes" name="notes" rows={3} className="textarea" defaultValue={campaign?.notes ?? ""} disabled={disabled} placeholder="Anything we should know: launch timing, which placements matter most…" />

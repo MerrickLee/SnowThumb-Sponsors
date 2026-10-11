@@ -178,6 +178,16 @@ export async function toggleGear(form: FormData) {
   revalidatePath("/admin/gear");
 }
 
+export async function updateGearPrice(form: FormData): Promise<void> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const id = String(form.get("id"));
+  const cred_price = intOrNull(form.get("cred_price"));
+  if (cred_price === null || cred_price < 0) return;
+  await supabase.from("gear_items").update({ cred_price }).eq("id", id);
+  revalidatePath("/admin/gear");
+}
+
 export async function saveChallenge(_: AdminState, form: FormData): Promise<AdminState> {
   await requireAdmin();
   const supabase = await createClient();

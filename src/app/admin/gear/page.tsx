@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/Shell";
 import { ActionForm } from "@/components/ActionForm";
-import { saveChallenge, saveGear, toggleChallenge, toggleGear } from "@/app/admin/actions";
+import { saveChallenge, saveGear, toggleChallenge, toggleGear, updateGearPrice } from "@/app/admin/actions";
 import { campaignDates } from "@/lib/format";
+import type { GearColors } from "@/lib/types";
 
 const TRICKS: [string, string][] = [
   ["any", "Any trick"], ["50_50", "50-50"], ["boardslide", "Boardslide"], ["lipslide", "Lipslide"],
@@ -12,28 +13,55 @@ const TRICKS: [string, string][] = [
   ["tabletop_straight", "Straight air (tabletop)"], ["tabletop_180", "Tabletop 180"], ["tabletop_360", "Tabletop 360"], ["tabletop_540", "Tabletop 540"],
 ];
 
+function ColorSwatches({ colors }: { colors: GearColors | null }) {
+  if (!colors || Object.keys(colors).length === 0) return <span className="text-muted text-xs">—</span>;
+  const list = [
+    { label: "Frame", hex: colors.frame },
+    { label: "Strap", hex: colors.strap },
+    { label: "Accent", hex: colors.accent },
+    { label: "Shell", hex: colors.shell },
+    { label: "Trim", hex: colors.trim },
+    { label: "Laces", hex: colors.laces },
+    { label: "Sole", hex: colors.sole },
+  ].filter((x) => x.hex);
+
+  return (
+    <div className="flex items-center gap-1.5" title={list.map((c) => `${c.label}: ${c.hex}`).join(", ")}>
+      {list.map((c) => (
+        <span
+          key={c.label}
+          className="inline-block w-4 h-4 rounded-full border border-line shadow-xs shrink-0"
+          style={{ backgroundColor: c.hex }}
+          title={`${c.label}: ${c.hex}`}
+        />
+      ))}
+      {colors.style && <span className="text-[10px] text-muted ml-1 capitalize">{colors.style.replace("_", "-")}</span>}
+    </div>
+  );
+}
+
 export default async function GearAdmin() {
   const supabase = await createClient();
   const [{ data: gear }, { data: challenges }, { data: slots }, { data: creatives }, { data: sponsors }, { data: campaigns }] = await Promise.all([
     supabase.from("gear_items").select("*, sponsors(name)").order("sort"),
     supabase.from("challenges").select("*, sponsors(name), campaigns(name)").order("created_at", { ascending: false }),
-    supabase.from("slots").select("id, label, base_model_id, kind").in("kind", ["board", "binding"]).order("sort"),
+    supabase.from("slots").select("id, label, base_model_id, kind").in("kind", ["board", "binding", "boot"]).order("sort"),
     supabase.from("creatives").select("id, slot_id, campaigns(name), sponsors(name)").eq("status", "approved").in("slot_id",
-      ["board_twin_v1", "board_directional_v1", "binding_classic_v1"]),
+      ["board_twin_v1", "board_directional_v1", "binding_classic_v1", "binding_logo", "boot_logo"]),
     supabase.from("sponsors").select("id, name").order("name"),
     supabase.from("campaigns").select("id, name, sponsor_id, sponsors(name, is_house)").in("status", ["approved", "paused"]).order("created_at", { ascending: false }),
   ]);
 
   return (
     <>
-      <PageHeader title="Gear & challenges" sub="Boards and bindings players unlock, and the sponsor challenges that award them. Changes reach the app on the next manifest fetch." />
+      <PageHeader title="Gear & challenges" sub="Boards, bindings and boots players unlock, and the sponsor challenges that award them. Changes reach the app on the next manifest fetch." />
 
       <section className="mb-10">
         <h2 className="font-semibold mb-3">Add or update gear</h2>
         <ActionForm action={saveGear} submit="Save gear" className="card p-5 grid md:grid-cols-4 gap-4">
           <div><label className="label" htmlFor="f-id">Gear ID</label><input id="f-id" name="id" className="input" required placeholder="board_acme_fall26" pattern="[a-z0-9_]{3,64}" />
             <p className="text-xs text-muted mt-1">Permanent. Stored in player saves. Same ID updates.</p></div>
-          <div><label className="label" htmlFor="f-kind">Kind</label><select id="f-kind" name="kind" className="select"><option value="board">Board</option><option value="binding">Binding</option></select></div>
+          <div><label className="label" htmlFor="f-kind">Kind</label><select id="f-kind" name="kind" className="select"><option value="board">Board</option><option value="binding">Binding</option><option value="boot">Boot</option></select></div>
           <div><label className="label" htmlFor="f-base-model-id">Base model</label><select id="f-base-model-id" name="base_model_id" className="select">
             {(slots ?? []).map((s) => <option key={s.id} value={s.base_model_id ?? s.id}>{s.label} ({s.base_model_id})</option>)}
           </select></div>
@@ -54,7 +82,7 @@ export default async function GearAdmin() {
             <option value="cred">Cred price</option><option value="score">Score threshold</option>
             <option value="challenge">Challenge only</option><option value="free">Free</option><option value="iap">In-app purchase</option>
           </select></div>
-          <div data-unlock="cred"><label className="label" htmlFor="f-cred-price">Cred price</label><input id="f-cred-price" name="cred_price" type="number" min={0} className="input" placeholder="500" /></div>
+          <div data-unlock="cred"><label className="label" htmlFor="f-cred-price">Cred price</label><input id="f-cred-price" name="cred_price" type="number" min={0} className="input" placeholder="25000" /></div>
           <div data-unlock="score"><label className="label" htmlFor="f-score-threshold">Score threshold</label><input id="f-score-threshold" name="score_threshold" type="number" min={0} className="input" /></div>
           <div data-unlock="iap"><label className="label" htmlFor="f-iap-product-id">IAP product ID</label><input id="f-iap-product-id" name="iap_product_id" className="input" placeholder="com.snowthumb.board.x" /></div>
           <div><label className="label" htmlFor="f-sort">Sort</label><input id="f-sort" name="sort" type="number" className="input" defaultValue={0} /></div>
@@ -66,20 +94,39 @@ export default async function GearAdmin() {
 
         <div className="card overflow-x-auto mt-4">
           <table className="table">
-            <thead><tr><th>ID</th><th>Name</th><th>Sponsor</th><th>Unlock</th><th>Art</th><th></th></tr></thead>
+            <thead><tr><th>ID</th><th>Name</th><th>Sponsor</th><th>Colors</th><th>Unlock & Price</th><th>Art</th><th></th></tr></thead>
             <tbody>
               {(gear ?? []).map((g) => (
                 <tr key={g.id} className={g.active ? "" : "opacity-50"}>
                   <td className="font-mono text-xs">{g.id}</td>
                   <td>{g.name}<span className="text-muted text-xs block">{g.kind} · {g.base_model_id}</span></td>
                   <td className="text-muted">{(g.sponsors as { name: string } | null)?.name ?? "House"}</td>
-                  <td className="num">{g.unlock === "cred" ? `${g.cred_price} Cred` : g.unlock === "score" ? `Score ${g.score_threshold}` : g.unlock}</td>
+                  <td><ColorSwatches colors={g.colors as GearColors | null} /></td>
+                  <td>
+                    {g.unlock === "cred" ? (
+                      <form action={updateGearPrice} className="flex items-center gap-2">
+                        <input type="hidden" name="id" value={g.id} />
+                        <input
+                          name="cred_price"
+                          type="number"
+                          min={0}
+                          defaultValue={g.cred_price ?? 0}
+                          className="input input-sm w-24 py-1 px-2 text-xs font-mono"
+                        />
+                        <button className="btn btn-sm text-xs py-1 px-2">Update</button>
+                      </form>
+                    ) : g.unlock === "score" ? (
+                      `Score ${g.score_threshold}`
+                    ) : (
+                      g.unlock
+                    )}
+                  </td>
                   <td className="text-muted text-xs">{g.creative_id ? "Sponsor art" : "Built-in"}</td>
                   <td><form action={toggleGear}><input type="hidden" name="id" value={g.id} /><input type="hidden" name="active" value={String(!g.active)} />
                     <button className="btn btn-sm">{g.active ? "Disable" : "Enable"}</button></form></td>
                 </tr>
               ))}
-              {(gear ?? []).length === 0 && <tr><td colSpan={6} className="text-muted">No gear yet.</td></tr>}
+              {(gear ?? []).length === 0 && <tr><td colSpan={7} className="text-muted">No gear yet.</td></tr>}
             </tbody>
           </table>
         </div>

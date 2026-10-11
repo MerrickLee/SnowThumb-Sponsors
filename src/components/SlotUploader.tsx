@@ -41,6 +41,7 @@ export function SlotUploader({
   // Banner package: every banner in the park is the same size and one brand owns them all,
   // so the sponsor uploads one file and it's saved for every banner slot.
   const bannerIds = slots.filter((s) => s.kind === "banner").map((s) => s.id);
+  const gearLogoIds = slots.filter((s) => s.id === "binding_logo" || s.id === "boot_logo").map((s) => s.id);
   const targets: Record<string, string[]> = {};
   const units: Slot[] = [];
   for (const sl of slots) {
@@ -48,6 +49,10 @@ export function SlotUploader({
       if (sl.id !== bannerIds[0]) continue;
       targets[sl.id] = bannerIds;
       units.push({ ...sl, label: "Banner package", description: "One file runs on every banner in the park: overhead, both walls and the finish wall. No other brand shares them while you're on." });
+    } else if ((sl.id === "binding_logo" || sl.id === "boot_logo") && gearLogoIds.length > 1) {
+      if (sl.id !== "binding_logo") continue;
+      targets[sl.id] = gearLogoIds;
+      units.push({ ...sl, label: "Gear logo (Bindings & Boots)", description: "One 512×512 transparent PNG is applied to both your bindings (highback) and your boots (outer shaft) in the Gear Room." });
     } else {
       units.push(sl);
     }

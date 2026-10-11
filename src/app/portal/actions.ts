@@ -8,6 +8,15 @@ import { friendly } from "@/lib/errors";
 
 export type ActionState = { error?: string; ok?: string; code?: string };
 
+function hexColor(val: string): string | null {
+  const v = val.trim();
+  if (!v) return null;
+  if (!/^#[0-9a-fA-F]{6}$/.test(v)) {
+    throw new Error(`Color "${val}" is invalid. Colors must be in #RRGGBB format.`);
+  }
+  return v.toLowerCase();
+}
+
 function fields(form: FormData) {
   const s = (k: string) => String(form.get(k) ?? "").trim();
   const link = s("link_url");
@@ -27,13 +36,32 @@ function fields(form: FormData) {
       board_name: s("board_name").slice(0, 32) || null,
       board_tagline: s("board_tagline").slice(0, 90) || null,
     } : {}),
+    ...(form.has("binding_name") || form.has("binding_frame") ? {
+      binding_name: s("binding_name").slice(0, 32) || null,
+      binding_tagline: s("binding_tagline").slice(0, 90) || null,
+      binding_style: (["step_on", "strap"].includes(s("binding_style")) ? s("binding_style") : "strap") as "step_on" | "strap",
+      binding_frame: hexColor(s("binding_frame")),
+      binding_strap: hexColor(s("binding_strap")),
+      binding_accent: hexColor(s("binding_accent")),
+      boot_name: s("boot_name").slice(0, 32) || null,
+      boot_tagline: s("boot_tagline").slice(0, 90) || null,
+      boot_shell: hexColor(s("boot_shell")),
+      boot_trim: hexColor(s("boot_trim")),
+      boot_laces: hexColor(s("boot_laces")),
+      boot_sole: hexColor(s("boot_sole")),
+    } : {}),
   };
 }
 
 export async function createCampaign(_: ActionState, form: FormData): Promise<ActionState> {
   const supabase = await createClient();
   const sponsor_id = String(form.get("sponsor_id") ?? "");
-  const f = fields(form);
+  let f;
+  try {
+    f = fields(form);
+  } catch (err: unknown) {
+    return { error: err instanceof Error ? err.message : "Invalid gear configuration." };
+  }
   if (!f.name) return { error: "Give the campaign a name." };
   if (f.starts_at && f.ends_at && f.ends_at <= f.starts_at) return { error: "The end date needs to be after the start date." };
   const { data, error } = await supabase.from("campaigns").insert({ sponsor_id, ...f }).select("id").single();
@@ -44,7 +72,12 @@ export async function createCampaign(_: ActionState, form: FormData): Promise<Ac
 export async function updateCampaign(_: ActionState, form: FormData): Promise<ActionState> {
   const supabase = await createClient();
   const id = String(form.get("id") ?? "");
-  const f = fields(form);
+  let f;
+  try {
+    f = fields(form);
+  } catch (err: unknown) {
+    return { error: err instanceof Error ? err.message : "Invalid gear configuration." };
+  }
   if (!f.name) return { error: "Give the campaign a name." };
   if (f.starts_at && f.ends_at && f.ends_at <= f.starts_at) return { error: "The end date needs to be after the start date." };
   const { error } = await supabase.from("campaigns").update(f).eq("id", id);
