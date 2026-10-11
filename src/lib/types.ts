@@ -54,6 +54,8 @@ export type Campaign = {
   paid_at: string | null;
   gear_starts_at: string | null;
   gear_ends_at: string | null;
+  board_name: string | null;
+  board_tagline: string | null;
   created_at: string;
 };
 

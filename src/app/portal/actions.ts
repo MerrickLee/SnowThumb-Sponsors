@@ -22,6 +22,11 @@ function fields(form: FormData) {
       ends_at: ends ? easternDayToIso(ends, "end") : null,
     } : {}),
     notes: s("notes") || null,
+    // Only sent by forms that show the Gear Room fields.
+    ...(form.has("board_name") ? {
+      board_name: s("board_name").slice(0, 32) || null,
+      board_tagline: s("board_tagline").slice(0, 90) || null,
+    } : {}),
   };
 }
 

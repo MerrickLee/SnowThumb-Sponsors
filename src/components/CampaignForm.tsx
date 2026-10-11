@@ -57,6 +57,23 @@ export function CampaignForm({
         <p className="hint">Leave blank to run until you pause it.</p>
       </div>
       </>)}
+      <fieldset className="md:col-span-2 grid md:grid-cols-2 gap-5 [&>*]:min-w-0 border-t border-line pt-5">
+        <legend className="sr-only">Your board in the Gear Room</legend>
+        <div className="md:col-span-2">
+          <p className="font-semibold text-ink">Your board in the Gear Room <span className="font-normal text-muted">optional</span></p>
+          <p className="hint">If you upload a Twin board graphic, players see your board in the app&apos;s Gear Room with this name and description, plus a Visit link to the page above.</p>
+        </div>
+        <div>
+          <label className="label" htmlFor="board_name">Board name</label>
+          <input id="board_name" name="board_name" className="input" maxLength={32} defaultValue={campaign?.board_name ?? ""} disabled={disabled} placeholder="Night Rider" />
+          <p className="hint">Up to 32 characters. Leave blank to use your brand name.</p>
+        </div>
+        <div>
+          <label className="label" htmlFor="board_tagline">Board description</label>
+          <input id="board_tagline" name="board_tagline" className="input" maxLength={90} defaultValue={campaign?.board_tagline ?? ""} disabled={disabled} placeholder="Lights down. Send it." />
+          <p className="hint">One short line, up to 90 characters.</p>
+        </div>
+      </fieldset>
       <div className="md:col-span-2">
         <label className="label" htmlFor="notes">Notes for our team <span className="font-normal text-muted">optional</span></label>
         <textarea id="notes" name="notes" rows={3} className="textarea" defaultValue={campaign?.notes ?? ""} disabled={disabled} placeholder="Anything we should know: launch timing, which placements matter most…" />
