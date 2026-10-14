@@ -19,6 +19,7 @@ export function Footer() {
         </div>
         <nav aria-label="Footer" className="flex flex-wrap gap-x-5 gap-y-2">
           <a className="hover:text-text" href="https://snowthumb.com" target="_blank" rel="noreferrer">snowthumb.com</a>
+          <a className="hover:text-text" href="https://apps.apple.com/us/app/snowthumb/id6811146048" target="_blank" rel="noreferrer">Get SnowThumb on the App Store</a>
           <a className="hover:text-text" href="/pricing">Opportunities &amp; Pricing</a>
           <a className="hover:text-text" href="mailto:sponsors@snowthumb.com">sponsors@snowthumb.com</a>
           <a className="hover:text-text" href="/apply">Become a sponsor</a>
