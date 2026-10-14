@@ -1,9 +1,10 @@
 # SnowThumb app-ads.txt (iOS id6811146048, Android com.croesave.snowthumb)
 # Served at sponsors.snowthumb.com/app-ads.txt; www.snowthumb.com/app-ads.txt redirects here.
-# Direct: ironSource Ads via LevelPlay (publisher ID from LevelPlay > Account > API).
+# Direct: ironSource Ads via LevelPlay (publisher ID from LevelPlay > Account > API) and Google AdMob.
 # Resellers: ironSource authorized resellers list from docs.unity.com, copied 2026-10-14. Unity updates it periodically.
 OWNERDOMAIN=snowthumb.com
 ironsrc.com, 683085, DIRECT
+google.com, pub-4815780631514802, DIRECT, f08c47fec0942fa0
 
 media.net, 8CUH2L333, RESELLER
 sharethrough.com, 3817, RESELLER, d53b998a7bd4ecd2
