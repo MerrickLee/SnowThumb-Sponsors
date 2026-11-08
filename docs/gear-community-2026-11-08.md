@@ -13,3 +13,13 @@ Verification: seven Node tests cover request fields, optional email, streamed si
 Local browser checks: the new landing page renders, its compact form has three required fields plus optional message, and empty submission identifies the missing fields without sending a request. Local layout testing uses ignored stub environment configuration that disables real application submission. Production uses the existing Vercel configuration. No fake sponsor lead was submitted and no notification webhook was triggered for testing.
 
 Deployment and live receipt/authorization checks are recorded after publishing. The separate Unity release includes the actual gear prompt and player-facing request form.
+
+## Production verification — November 8, 2026
+
+Implementation commit c8e763d67115e2f522e05dac3a73220e919a55d8 was pushed to main. Vercel deployment dpl_55E7TjeXdN77Qt5rnWSk8DxDanrf reached READY for production at sponsors.snowthumb.com. The published /join page returned HTTP 200 and was visually checked with the real Croes Ave board example and short inquiry form.
+
+The game Editor submitted a clearly labeled, reply-email-free QA idea (request efcc8c4d-850c-41e4-af36-da885abd6790, OSXEditor) through the production API and displayed its matching success receipt. Repeating the same request returned HTTP 200 with the same receipt. It is segregated under testing/, outside the player inbox. No notification was sent.
+
+The private object's public URL returned a denial without revealing the idea. Signed-out /admin/suggestions returned HTTP 307 to /login?next=%2Fadmin%2Fsuggestions. Administrator contents were not opened with a signed-in admin account during this test; the handler checks authorization before making privileged reads. Production configuration stayed on Vercel; no server credential was retrieved or copied.
+
+Previous production deployment dpl_74aehPfzz8qFVPwpfvL6XfRdGG5e remains the rollback reference. The new endpoint can be disabled by reverting its route if needed; existing sponsor application behavior remains on its prior endpoint.
