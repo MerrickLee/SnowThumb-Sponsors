@@ -20,6 +20,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
     { href: "/admin/campaigns", label: "Campaigns" },
     { href: "/admin/promos", label: "Promo codes" },
     { href: "/admin/gear", label: "Gear" },
+    { href: "/admin/suggestions", label: "Player ideas" },
     { href: "/admin/house", label: "House ads" },
   ];
   return (

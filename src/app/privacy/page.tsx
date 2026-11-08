@@ -10,12 +10,13 @@ export default function Privacy() {
       <main id="main" className="flex-1 mx-auto max-w-2xl w-full px-4 py-10">
         <Logo height={28} href="/apply" />
         <h1 className="title text-4xl mt-8">Privacy</h1>
-        <p className="text-muted mt-2">How sponsors.snowthumb.com uses data. Last updated October 3, 2026.</p>
+        <p className="text-muted mt-2">How sponsors.snowthumb.com uses data. Last updated November 8, 2026.</p>
 
         <section className="mt-8 space-y-3">
           <h2 className="title text-xl">What we collect</h2>
           <p>When you apply, we keep what you type into the form (company, contact name, email, website, interests, budget, logo) so we can reply and set up your sponsor account.</p>
           <p>When you sign in, we keep your email and the campaigns, art and settings you create, so the console works.</p>
+          <p>When you explicitly send a gear idea in SnowThumb, we keep the category, idea, game version and platform, and your reply email if you provide one. The idea is available only to our team. The optional email is used only to reply to the request, not for marketing. We also use a daily, non-reversible address token to limit spam. We do not send your idea or email to analytics.</p>
         </section>
 
         <section className="mt-8 space-y-3">

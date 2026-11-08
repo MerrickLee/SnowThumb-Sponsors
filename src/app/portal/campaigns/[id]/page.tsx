@@ -15,7 +15,7 @@ import { BookDays } from "@/components/BookDays";
 import { BookGear } from "@/components/BookGear";
 import { startCheckout } from "@/app/portal/billing-actions";
 import { applyPaidSession, getStripe } from "@/lib/stripe";
-import { GEAR_TERMS, isGearKind, usd } from "@/lib/pricing";
+import { isGearKind, usd } from "@/lib/pricing";
 import type { Campaign, CampaignOrder, Creative, Slot } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Campaign" };

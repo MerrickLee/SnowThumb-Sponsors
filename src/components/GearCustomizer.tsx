@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import type { Campaign } from "@/lib/types";
 import { createClient } from "@/lib/supabase/client";
 import { track } from "@/lib/analytics";
@@ -184,14 +184,11 @@ export function GearCustomizer({
   const [btSole, setBtSole] = useState(campaign?.boot_sole ?? "#111215");
 
   // Shared Logo Upload state
-  const [logoUrl, setLogoUrl] = useState<string | null>(existingLogoUrl ?? null);
+  const [uploadedLogoUrl, setLogoUrl] = useState<string | null>(null);
+  const logoUrl = uploadedLogoUrl ?? existingLogoUrl ?? null;
   const [uploading, setUploading] = useState(false);
   const [uploadMsg, setUploadMsg] = useState<{ tone: "ok" | "bad"; text: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (existingLogoUrl && !logoUrl) setLogoUrl(existingLogoUrl);
-  }, [existingLogoUrl, logoUrl]);
 
   async function handleLogoUpload(file: File) {
     setUploadMsg(null);

@@ -18,7 +18,7 @@ const MAX_LOGO = 5 * 1024 * 1024;
 
 type Errors = Partial<Record<"company_name" | "contact_name" | "contact_email" | "logo" | "form", string>>;
 
-export function SponsorApplyForm() {
+export function SponsorApplyForm({ compact = false }: { compact?: boolean }) {
   const ref = useRef<HTMLFormElement>(null);
   const [state, setState] = useState<"idle" | "sending" | "done">("idle");
   const [errors, setErrors] = useState<Errors>({});
@@ -56,7 +56,8 @@ export function SponsorApplyForm() {
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error ?? "Something went wrong. Please try again.");
       track("apply_submitted", {
-        interests: form.getAll("interests").map(String),
+        interests: form.getAll("interested_slots").map(String),
+        ...attribution(),
         budget_range: String(form.get("budget_range") ?? "") || undefined,
         has_logo: form.get("logo") instanceof File && (form.get("logo") as File).size > 0,
       });
@@ -97,17 +98,17 @@ export function SponsorApplyForm() {
       onFocus={(e) => {
         if (startedRef.current) return;
         startedRef.current = true;
-        track("apply_started", { first_field: (e.target as unknown as HTMLInputElement).name || undefined });
+        track("apply_started", { first_field: (e.target as unknown as HTMLInputElement).name || undefined, ...attribution() });
       }} noValidate className="card p-5 md:p-7 grid md:grid-cols-2 gap-5 [&>*]:min-w-0" encType="multipart/form-data">
       <div>
         <label className="label" htmlFor="company_name">Company<span className="req" aria-hidden>*</span></label>
         <input id="company_name" name="company_name" required autoComplete="organization" className="input" {...field("company_name")} />
         <Err errors={errors} name="company_name" />
       </div>
-      <div>
+      {!compact && <div>
         <label className="label" htmlFor="website_url">Website</label>
         <input id="website_url" name="website_url" className="input" inputMode="url" autoComplete="url" placeholder="yourbrand.com" />
-      </div>
+      </div>}
       <div>
         <label className="label" htmlFor="contact_name">Your name<span className="req" aria-hidden>*</span></label>
         <input id="contact_name" name="contact_name" required autoComplete="name" className="input" {...field("contact_name")} />
@@ -119,7 +120,7 @@ export function SponsorApplyForm() {
         <Err errors={errors} name="contact_email" />
       </div>
 
-      <fieldset className="md:col-span-2">
+      {!compact && <fieldset className="md:col-span-2">
         <legend className="label">What are you interested in? <span className="font-normal text-muted">Pick any</span></legend>
         <div className="grid sm:grid-cols-2 gap-2.5">
           {SLOTS.map((s) => (
@@ -129,16 +130,16 @@ export function SponsorApplyForm() {
             </label>
           ))}
         </div>
-      </fieldset>
+      </fieldset>}
 
-      <div>
+      {!compact && <div>
         <label className="label" htmlFor="budget_range">Monthly budget</label>
         <select id="budget_range" name="budget_range" className="select" defaultValue="">
           <option value="">Choose a range</option>
           {BUDGETS.map((b) => <option key={b}>{b}</option>)}
         </select>
-      </div>
-      <div>
+      </div>}
+      {!compact && <div>
         <span className="label" id="logo-label">Logo <span className="font-normal text-muted">optional</span></span>
         <label className={`flex items-center gap-3 rounded-lg border border-dashed px-3 min-h-11 cursor-pointer hover:border-accent ${errors.logo ? "border-bad" : "border-[var(--line-strong)]"}`}>
           <span className="btn btn-sm pointer-events-none">Choose file</span>
@@ -147,7 +148,7 @@ export function SponsorApplyForm() {
             onChange={(e) => setLogoName(e.target.files?.[0]?.name ?? "")} {...field("logo")} />
         </label>
         <Err errors={errors} name="logo" />
-      </div>
+      </div>}
       <div className="md:col-span-2">
         <label className="label" htmlFor="message">Anything else? <span className="font-normal text-muted">optional</span></label>
         <textarea id="message" name="message" rows={4} className="textarea" placeholder="Goals, timing, the audience you want to reach" />
@@ -162,12 +163,17 @@ export function SponsorApplyForm() {
 
       <div className="md:col-span-2 flex flex-col sm:flex-row sm:items-center gap-3">
         <button className="btn btn-primary w-full sm:w-auto" disabled={state === "sending"}>
-          {state === "sending" ? "Sending…" : "Apply to sponsor"}
+          {state === "sending" ? "Sending…" : compact ? "Send my inquiry" : "Apply to sponsor"}
         </button>
-        <p className="text-sm text-muted">Takes about two minutes. No commitment.</p>
+        <p className="text-sm text-muted">{compact ? "No account needed. No commitment." : "Takes about two minutes. No commitment."}</p>
       </div>
     </form>
   );
+}
+
+function attribution() {
+  const query = new URLSearchParams(window.location.search);
+  return Object.fromEntries(["utm_source", "utm_medium", "utm_campaign"].map((key) => [key, (query.get(key) ?? "").slice(0, 80)]));
 }
 
 function Err({ errors, name }: { errors: Errors; name: keyof Errors }) {
